@@ -7,17 +7,8 @@ import { Shield, Clock, DollarSign, ArrowRight, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import heroImage from '@/assets/hero-insurance.jpg';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  duration: string;
-  coverage: string;
-  rating: number;
-  popular?: boolean;
-}
+import { ProductsService } from '@/services/productsService';
+import { Product } from '@/types';
 
 const Dashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -25,56 +16,14 @@ const Dashboard: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Mock API call - replace with actual endpoint
     const fetchProducts = async () => {
       try {
-        // Simulated API response
-        const mockProducts: Product[] = [
-          {
-            id: '1',
-            name: 'Acidentes 48h',
-            description: 'Cobertura completa para acidentes pessoais nas próximas 48 horas',
-            basePrice: 3.00,
-            duration: '48 horas',
-            coverage: 'R$ 50.000',
-            rating: 4.8,
-            popular: true
-          },
-          {
-            id: '2',
-            name: 'Diária Autônomos',
-            description: 'Proteção para profissionais autônomos durante atividades diárias',
-            basePrice: 2.50,
-            duration: '24 horas',
-            coverage: 'R$ 30.000',
-            rating: 4.6
-          },
-          {
-            id: '3',
-            name: 'Viagem Express',
-            description: 'Seguro para viagens curtas e deslocamentos urbanos',
-            basePrice: 4.90,
-            duration: '72 horas',
-            coverage: 'R$ 75.000',
-            rating: 4.9
-          },
-          {
-            id: '4',
-            name: 'Eventos Esportivos',
-            description: 'Cobertura especializada para atividades esportivas e recreativas',
-            basePrice: 5.50,
-            duration: '12 horas',
-            coverage: 'R$ 40.000',
-            rating: 4.7
-          }
-        ];
-
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate loading
-        setProducts(mockProducts);
+        const fetchedProducts = await ProductsService.getAllProducts();
+        setProducts(fetchedProducts);
       } catch (error) {
         toast({
           title: "Erro ao carregar produtos",
-          description: "Não foi possível carregar os produtos disponíveis.",
+          description: error instanceof Error ? error.message : "Não foi possível carregar os produtos disponíveis.",
           variant: "destructive"
         });
       } finally {
