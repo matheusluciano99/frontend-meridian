@@ -34,6 +34,13 @@ export interface Product {
   id: string;
   code: string;
   name: string;
+  description?: string;
   price: number; // em centavos
+  coverage_amount: number;
+  coverage_type: string;
+  coverage_duration: number;
   coverage: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }

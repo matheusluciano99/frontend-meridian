@@ -8,12 +8,16 @@ export class ProductsService {
     return {
       id: apiProduct.id,
       name: apiProduct.name,
-      description: `Cobertura de ${apiProduct.coverage} com proteção completa`,
+      description: apiProduct.description || `Cobertura de ${apiProduct.coverage} com proteção completa`,
       basePrice: apiProduct.price / 100, // converter de centavos para reais
-      duration: '24 horas', // TODO: adicionar duração no backend
+      duration: `${apiProduct.coverage_duration} dias`, // usar duração da API
       coverage: apiProduct.coverage,
       rating: 4.5, // TODO: adicionar rating no backend
       popular: apiProduct.code === 'ACCIDENT_48H', // marcar como popular baseado no código
+      category: apiProduct.coverage_type,
+      coverageAmount: apiProduct.coverage_amount,
+      minDuration: 1, // duração mínima em horas
+      maxDuration: apiProduct.coverage_duration * 24, // converter dias para horas
     };
   }
 
