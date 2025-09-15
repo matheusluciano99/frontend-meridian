@@ -61,10 +61,10 @@ export const Header: React.FC = () => {
               Dashboard
             </Link>
             <Link to="/coverage" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Coverage
+              Cobertura
             </Link>
             <Link to="/history" className="text-muted-foreground hover:text-foreground transition-smooth">
-              History
+              Histórico
             </Link>
             <Link to="/claims" className="text-muted-foreground hover:text-foreground transition-smooth">
               Sinistros
@@ -110,13 +110,13 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/coverage">
                       <Shield className="mr-2 h-4 w-4" />
-                      Coverage
+                      Cobertura
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/history">
                       <History className="mr-2 h-4 w-4" />
-                      History
+                      Histórico
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
