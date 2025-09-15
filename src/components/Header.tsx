@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings, Coins } from 'lucide-react';
+import { Shield, User, History, LogOut, Settings, Coins, FileText } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
@@ -66,6 +66,9 @@ export const Header: React.FC = () => {
             <Link to="/history" className="text-muted-foreground hover:text-foreground transition-smooth">
               History
             </Link>
+            <Link to="/claims" className="text-muted-foreground hover:text-foreground transition-smooth">
+              Sinistros
+            </Link>
           </nav>
 
           {/* User Menu */}
@@ -120,6 +123,12 @@ export const Header: React.FC = () => {
                     <Link to="/profile">
                       <User className="mr-2 h-4 w-4" />
                       Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/claims">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Sinistros
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
