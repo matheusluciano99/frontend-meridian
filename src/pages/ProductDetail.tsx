@@ -12,7 +12,8 @@ import {
   CheckCircle, 
   ArrowLeft,
   Calculator,
-  Zap
+  Zap,
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -139,7 +140,7 @@ const ProductDetail: React.FC = () => {
       if (!activateResponse.ok) throw new Error('Failed to activate policy');
 
       // 3. Redirect to checkout
-      window.location.href = `/api/checkout?policyId=${policy.id}`;
+      navigate(`/checkout/${policy.id}`);
       
     } catch (error) {
       // For demo, simulate success
@@ -345,6 +346,20 @@ const ProductDetail: React.FC = () => {
 
                 <p className="text-xs text-center text-muted-foreground">
                   Ativação instantânea via blockchain Stellar
+                </p>
+
+                {/* Other Payment Methods Button */}
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate(`/checkout/policy_${product.id}`)}
+                  className="w-full mt-3"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Outros Pagamentos
+                </Button>
+                
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  PIX, Anchor e outras opções de pagamento
                 </p>
               </CardContent>
             </Card>

@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,8 +11,13 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+
+  // Mostrar loading enquanto verifica autenticação
+  if (isLoading) {
+    return <LoadingSpinner message="Inicializando aplicação..." />;
+  }
 
   if (requireAuth && !isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings, Coins } from 'lucide-react';
+import { Shield, User, History, LogOut, Settings, Coins, FileText } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
@@ -57,14 +57,17 @@ export const Header: React.FC = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Dashboard
+            <Link to="/products" className="text-muted-foreground hover:text-foreground transition-smooth">
+              Produtos
             </Link>
             <Link to="/coverage" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Coverage
+              Cobertura
             </Link>
             <Link to="/history" className="text-muted-foreground hover:text-foreground transition-smooth">
-              History
+              Histórico
+            </Link>
+            <Link to="/claims" className="text-muted-foreground hover:text-foreground transition-smooth">
+              Sinistros
             </Link>
           </nav>
 
@@ -107,13 +110,25 @@ export const Header: React.FC = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/coverage">
                       <Shield className="mr-2 h-4 w-4" />
-                      Coverage
+                      Cobertura
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/history">
                       <History className="mr-2 h-4 w-4" />
-                      History
+                      Histórico
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/claims">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Sinistros
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
