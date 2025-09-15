@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Mail, Phone, Upload, CheckCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, Mail, Phone } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const Login: React.FC = () => {
@@ -18,10 +18,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [cpf, setCpf] = useState('');
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [kycStep, setKycStep] = useState<'form' | 'documents' | 'complete'>('form');
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -81,30 +79,15 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleKycSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (kycStep === 'form') {
-      setKycStep('documents');
-    } else if (kycStep === 'documents') {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setKycStep('complete');
-      setLoading(false);
-      toast({
-        title: "KYC enviado com sucesso",
-        description: "Seus documentos estão sendo analisados. Você será notificado em breve.",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       {/* Background gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10 pointer-events-none" />
       
-      <div className="relative z-10 w-full max-w-md p-6">
+      <div className="relative z-10 w-full max-w-md p-4 pt-8">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Shield className="w-8 h-8 text-white" />
           </div>
@@ -155,10 +138,16 @@ const Login: React.FC = () => {
                     />
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col space-y-2">
                   <Button type="submit" className="w-full gradient-primary" disabled={loading}>
                     {loading ? "Entrando..." : "Entrar"}
                   </Button>
+                  <p className="text-sm text-center text-muted-foreground">
+                    Não tem uma conta?{' '}
+                    <Link to="/register" className="text-primary hover:underline">
+                      Cadastre-se
+                    </Link>
+                  </p>
                 </CardFooter>
               </form>
             </Card>
@@ -216,77 +205,6 @@ const Login: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* KYC Section */}
-        <Card className="glass-card border-border/50 mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Verificação KYC
-              {kycStep === 'complete' && <CheckCircle className="w-5 h-5 text-success" />}
-            </CardTitle>
-            <CardDescription>
-              Complete sua verificação para ativar seguros
-            </CardDescription>
-          </CardHeader>
-          
-          {kycStep === 'form' && (
-            <form onSubmit={handleKycSubmit}>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cpf">CPF</Label>
-                    <Input
-                      id="cpf"
-                      type="text"
-                      placeholder="000.000.000-00"
-                      value={cpf}
-                      onChange={(e) => setCpf(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" variant="outline" className="w-full">
-                  Próximo: Documentos
-                </Button>
-              </CardFooter>
-            </form>
-          )}
-
-          {kycStep === 'documents' && (
-            <form onSubmit={handleKycSubmit}>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                    <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Envie uma selfie segurando seu documento
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" variant="outline" className="w-full" disabled={loading}>
-                  {loading ? "Enviando..." : "Enviar Documentos"}
-                </Button>
-              </CardFooter>
-            </form>
-          )}
-
-          {kycStep === 'complete' && (
-            <CardContent>
-              <div className="text-center py-4">
-                <CheckCircle className="w-12 h-12 text-success mx-auto mb-2" />
-                <p className="font-medium text-success">KYC Enviado com Sucesso</p>
-                <p className="text-sm text-muted-foreground">
-                  Seus documentos estão sendo analisados
-                </p>
-              </div>
-            </CardContent>
-          )}
-        </Card>
       </div>
     </div>
   );
