@@ -57,8 +57,8 @@ export const Header: React.FC = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Dashboard
+            <Link to="/products" className="text-muted-foreground hover:text-foreground transition-smooth">
+              Produtos
             </Link>
             <Link to="/coverage" className="text-muted-foreground hover:text-foreground transition-smooth">
               Cobertura
