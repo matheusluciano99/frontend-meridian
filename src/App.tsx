@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Coverage from "./pages/Coverage";
 import History from "./pages/History";
 import AdminPayout from "./pages/AdminPayout";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/coverage" element={<Coverage />} />
             <Route path="/history" element={<History />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/admin/payout" element={<AdminPayout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
