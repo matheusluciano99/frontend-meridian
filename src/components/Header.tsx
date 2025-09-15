@@ -50,7 +50,7 @@ export const Header: React.FC = () => {
             <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gradient-primary">
+            <span className="hidden md:block text-xl font-bold text-gradient-primary">
               Stellar Insurance
             </span>
           </Link>
