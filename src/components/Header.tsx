@@ -10,16 +10,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings } from 'lucide-react';
+import { Shield, User, History, LogOut, Settings, Coins } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      // Mesmo com erro, redireciona para login
+      navigate('/login');
+    }
   };
 
   const getKycStatusColor = (status: string) => {
@@ -68,6 +74,14 @@ export const Header: React.FC = () => {
               <Badge variant="secondary" className={getKycStatusColor(user.kycStatus)}>
                 KYC: {user.kycStatus.charAt(0).toUpperCase() + user.kycStatus.slice(1)}
               </Badge>
+
+              {/* Balance */}
+              <div className="flex items-center space-x-2 bg-primary/10 px-3 py-1.5 rounded-lg">
+                <Coins className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {user.balance.toFixed(2)} XLM
+                </span>
+              </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

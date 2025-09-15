@@ -2,12 +2,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { BalanceService } from '../services/balanceService';
 
 interface User {
   id: string;
   email: string;
   name: string;
   kycStatus: 'pending' | 'verified' | 'rejected';
+  balance: number;
 }
 
 interface AuthContextType {
@@ -17,6 +19,8 @@ interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   updateKycStatus: (status: 'pending' | 'verified' | 'rejected') => void;
+  updateBalance: (newBalance: number) => void;
+  refreshBalance: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,14 +42,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const userData: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-          kycStatus: 'pending'
-        };
-        setUser(userData);
-        setIsAuthenticated(true);
+        try {
+          const balance = await BalanceService.getUserBalance(session.user.id);
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+            kycStatus: 'pending',
+            balance: balance
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Erro ao buscar saldo do usuário:', error);
+          // Mesmo com erro no saldo, define o usuário com saldo 0
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+            kycStatus: 'pending',
+            balance: 0
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
       }
     };
 
@@ -54,14 +74,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const userData: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-          kycStatus: 'pending'
-        };
-        setUser(userData);
-        setIsAuthenticated(true);
+        try {
+          const balance = await BalanceService.getUserBalance(session.user.id);
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+            kycStatus: 'pending',
+            balance: balance
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Erro ao buscar saldo do usuário:', error);
+          // Mesmo com erro no saldo, define o usuário com saldo 0
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+            kycStatus: 'pending',
+            balance: 0
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -112,6 +148,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateBalance = (newBalance: number) => {
+    if (user) {
+      const updatedUser = { ...user, balance: newBalance };
+      setUser(updatedUser);
+    }
+  };
+
+  const refreshBalance = async () => {
+    if (user) {
+      const newBalance = await BalanceService.getUserBalance(user.id);
+      updateBalance(newBalance);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -119,7 +169,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       register,
       logout,
-      updateKycStatus
+      updateKycStatus,
+      updateBalance,
+      refreshBalance
     }}>
       {children}
     </AuthContext.Provider>
