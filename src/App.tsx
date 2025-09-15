@@ -13,6 +13,7 @@ import History from "./pages/History";
 import AdminPayout from "./pages/AdminPayout";
 import Profile from "./pages/Profile";
 import Claims from "./pages/Claims";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/claims" element={<Claims />} />
+            <Route path="/checkout/:policyId" element={<Checkout />} />
             <Route path="/admin/payout" element={<AdminPayout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

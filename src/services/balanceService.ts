@@ -4,8 +4,8 @@ export class BalanceService {
   // Por enquanto, retorna um valor mockado
   static async getUserBalance(userId: string): Promise<number> {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Simular delay de API reduzido para melhor UX
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Mock: retornar saldo aleatório entre 0 e 1000 XLM
       const mockBalance = Math.random() * 1000;

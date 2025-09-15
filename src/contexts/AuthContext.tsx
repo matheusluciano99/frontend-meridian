@@ -15,6 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
@@ -36,36 +37,38 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Verificar sessão atual do Supabase
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        try {
-          const balance = await BalanceService.getUserBalance(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Definir usuário imediatamente com saldo 0 para evitar delay
           const userData: User = {
             id: session.user.id,
             email: session.user.email || '',
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
             kycStatus: 'pending',
-            balance: balance
+            balance: 0 // Saldo inicial, será atualizado em background
           };
           setUser(userData);
           setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Erro ao buscar saldo do usuário:', error);
-          // Mesmo com erro no saldo, define o usuário com saldo 0
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-            kycStatus: 'pending',
-            balance: 0
-          };
-          setUser(userData);
-          setIsAuthenticated(true);
+          
+          // Buscar saldo em background sem bloquear a UI
+          BalanceService.getUserBalance(session.user.id)
+            .then(balance => {
+              setUser(prev => prev ? { ...prev, balance } : null);
+            })
+            .catch(error => {
+              console.error('Erro ao buscar saldo do usuário:', error);
+            });
         }
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -74,34 +77,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        try {
-          const balance = await BalanceService.getUserBalance(session.user.id);
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-            kycStatus: 'pending',
-            balance: balance
-          };
-          setUser(userData);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Erro ao buscar saldo do usuário:', error);
-          // Mesmo com erro no saldo, define o usuário com saldo 0
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-            kycStatus: 'pending',
-            balance: 0
-          };
-          setUser(userData);
-          setIsAuthenticated(true);
-        }
+        // Definir usuário imediatamente
+        const userData: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+          kycStatus: 'pending',
+          balance: 0 // Saldo inicial, será atualizado em background
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        // Buscar saldo em background
+        BalanceService.getUserBalance(session.user.id)
+          .then(balance => {
+            setUser(prev => prev ? { ...prev, balance } : null);
+          })
+          .catch(error => {
+            console.error('Erro ao buscar saldo do usuário:', error);
+          });
       } else {
         setUser(null);
         setIsAuthenticated(false);
       }
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -166,6 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       isAuthenticated,
+      isLoading,
       login,
       register,
       logout,
