@@ -14,6 +14,10 @@ export interface Product {
   coverage: string;
   rating: number;
   popular?: boolean;
+  category: string;
+  coverageAmount: number;
+  minDuration: number;
+  maxDuration: number;
 }
 
 export interface ProductDetails extends Product {

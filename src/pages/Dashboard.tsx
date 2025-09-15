@@ -12,21 +12,6 @@ import heroImage from '@/assets/hero-insurance.jpg';
 import { ProductsService } from '@/services/productsService';
 import { Product } from '@/types';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  duration: string;
-  coverage: string;
-  rating: number;
-  popular?: boolean;
-  category: string;
-  coverageAmount: number;
-  minDuration: number;
-  maxDuration: number;
-}
-
 const Dashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
