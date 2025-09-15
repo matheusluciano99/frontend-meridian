@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Coverage from "./pages/Coverage";
 import History from "./pages/History";
 import AdminPayout from "./pages/AdminPayout";
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/coverage" element={<Coverage />} />
             <Route path="/history" element={<History />} />
