@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw, Package } from 'lucide-react';
+import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw, Package, Settings2 } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { user, logout, syncWalletBalance } = useAuth();
@@ -72,9 +72,11 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
+            <img 
+              src="/insurance_logo.png" 
+              alt="Insurance Logo" 
+              className="w-8 h-8 object-contain"
+            />
             <span className="hidden md:inline text-xl font-bold text-gradient-primary">
               Stellar Insurance
             </span>
@@ -185,6 +187,13 @@ export const Header: React.FC = () => {
                     <Link to="/profile">
                       <User className="mr-2 h-4 w-4" />
                       Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/products">
+                      <Settings2 className="mr-2 h-4 w-4" />
+                      Admin Products
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

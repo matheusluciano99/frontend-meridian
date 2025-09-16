@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import Coverage from "./pages/Coverage";
 import History from "./pages/History";
 import AdminPayout from "./pages/AdminPayout";
+import AdminProduct from "./pages/AdminProduct";
 import Profile from "./pages/Profile";
 import Claims from "./pages/Claims";
 import Checkout from "./pages/Checkout";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/claims" element={<Claims />} />
               <Route path="/checkout/:policyId" element={<Checkout />} />
               <Route path="/admin/payout" element={<AdminPayout />} />
+              <Route path="/admin/products" element={<AdminProduct />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -26,6 +26,19 @@ export const api = {
   // Métodos específicos para cada endpoint
   products: {
     getAll: () => api.request<Product[]>('/products'),
+    getAllForAdmin: () => api.request<Product[]>('/products/admin'),
+    getById: (id: string) => api.request<Product>(`/products/${id}`),
+    create: (product: any) => api.request<Product>('/products', {
+      method: 'POST',
+      body: JSON.stringify(product),
+    }),
+    update: (id: string, product: any) => api.request<Product>(`/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(product),
+    }),
+    delete: (id: string) => api.request<{ message: string }>(`/products/${id}`, {
+      method: 'DELETE',
+    }),
   },
   policies: {
     getAll: (userId?: string) => api.request<any[]>(`/policies${userId ? `?userId=${userId}` : ''}`),
