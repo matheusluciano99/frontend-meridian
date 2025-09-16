@@ -32,6 +32,9 @@ export const api = {
     pause: (id: string) => api.request<any>(`/policies/${id}/pause`, { method: 'POST' }),
     activate: (id: string) => api.request<any>(`/policies/${id}/activate`, { method: 'POST' }),
   },
+  ledger: {
+    getAll: (userId?: string) => api.request<any[]>(`/ledger${userId ? `?userId=${userId}` : ''}`),
+  },
 };
 
 // Tipos da API (baseados no backend)

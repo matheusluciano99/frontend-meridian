@@ -16,95 +16,38 @@ import {
   Shield
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface LedgerEvent {
-  id: string;
-  type: 'CHARGE_STARTED' | 'WEBHOOK_PAYMENT_CONFIRMED' | 'PolicyActivated' | 'PolicyPaused' | 'PolicyExpired';
-  description: string;
-  amount: number;
-  timestamp: Date;
-  status: 'completed' | 'pending' | 'failed';
-  txHash?: string;
-  policyId?: string;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { LedgerService, LedgerEventUI } from '@/services/ledgerService';
 
 const History: React.FC = () => {
-  const [events, setEvents] = useState<LedgerEvent[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<LedgerEvent[]>([]);
+  const [events, setEvents] = useState<LedgerEventUI[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<LedgerEventUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchHistory = async () => {
+      if (!user?.id) { setLoading(false); return; }
       try {
-        // Mock API call to /ledger endpoint
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const mockEvents: LedgerEvent[] = [
-          {
-            id: '1',
-            type: 'PolicyActivated',
-            description: 'Apólice Acidentes 48h ativada',
-            amount: 4.50,
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-            status: 'completed',
-            txHash: 'stellar_tx_abc123',
-            policyId: 'policy_123'
-          },
-          {
-            id: '2',
-            type: 'WEBHOOK_PAYMENT_CONFIRMED',
-            description: 'Pagamento via PIX confirmado',
-            amount: 4.50,
-            timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000),
-            status: 'completed'
-          },
-          {
-            id: '3',
-            type: 'CHARGE_STARTED',
-            description: 'Cobrança iniciada para Acidentes 48h',
-            amount: 4.50,
-            timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-            status: 'completed'
-          },
-          {
-            id: '4',
-            type: 'PolicyPaused',
-            description: 'Apólice pausada pelo usuário',
-            amount: 0,
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-            status: 'completed',
-            txHash: 'stellar_tx_def456',
-            policyId: 'policy_122'
-          },
-          {
-            id: '5',
-            type: 'PolicyExpired',
-            description: 'Apólice Diária Autônomos expirada',
-            amount: 2.50,
-            timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-            status: 'completed',
-            policyId: 'policy_121'
-          }
-        ];
-
-        setEvents(mockEvents);
-        setFilteredEvents(mockEvents);
+        const evts = await LedgerService.getUserEvents(user.id);
+        setEvents(evts);
+        setFilteredEvents(evts);
       } catch (error) {
+        console.error(error);
         toast({
-          title: "Erro ao carregar histórico",
-          description: "Não foi possível carregar o histórico de transações.",
-          variant: "destructive"
+          title: 'Erro ao carregar histórico',
+          description: 'Não foi possível carregar o histórico de transações.',
+          variant: 'destructive'
         });
       } finally {
         setLoading(false);
       }
     };
-
     fetchHistory();
-  }, [toast]);
+  }, [toast, user?.id]);
 
   useEffect(() => {
     let filtered = events;
