@@ -1,8 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { BalanceService } from '../services/balanceService';
+// Removed unused imports (SupabaseUser, BalanceService)
 import FreighterApi from '@stellar/freighter-api';
 
 interface User {
@@ -180,19 +179,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
+  // Renamed to avoid any HMR / duplicate identifier issues
+  const registerUser = async (email: string, password: string, name: string) => {
+    // Criar usuário no Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           name: name,
-        }
-      }
+        },
+      },
     });
 
     if (error) {
       throw error;
+    }
+
+    // Se o usuário foi criado com sucesso, criar registro na tabela users
+    if (data.user) {
+      try {
+        // Tentar obter endereço da carteira Freighter
+        let walletAddress = null;
+        if (typeof window !== 'undefined') {
+          try {
+            const publicKey = await FreighterApi.getPublicKey();
+            if (publicKey) {
+              walletAddress = publicKey;
+            }
+          } catch (walletError) {
+            console.log('Freighter not available or not connected, user can connect later');
+          }
+        }
+
+        // Criar registro na tabela users
+        const { error: userError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: data.user.id,
+              email: email,
+              name: name,
+              wallet_address: walletAddress,
+              balance: 0,
+              kyc_status: 'pending',
+            },
+          ]);
+
+        if (userError) {
+          console.error('Error creating user record:', userError);
+          // Não lançar erro aqui para não impedir o registro
+        }
+      } catch (err) {
+        console.error('Error in user creation:', err);
+      }
     }
   };
 
@@ -231,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated,
       isLoading,
       login,
-      register,
+  register: registerUser,
       logout,
       updateKycStatus,
       updateBalance,
