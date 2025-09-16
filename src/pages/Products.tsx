@@ -21,25 +21,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  duration: string;
-  coverage: string;
-  rating: number;
-  popular?: boolean;
-  category: string;
-  coverageAmount: number;
-  minDuration: number;
-  maxDuration: number;
-  features: string[];
-  recommended?: boolean;
-  trending?: boolean;
-  new?: boolean;
-}
+import { ProductsService } from '@/services/productsService';
+import { Product } from '@/types';
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,161 +37,9 @@ const Products: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const mockProducts: Product[] = [
-          {
-            id: '1',
-            name: 'Acidentes 48h',
-            description: 'Cobertura completa para acidentes pessoais nas próximas 48 horas com ativação instantânea',
-            basePrice: 3.00,
-            duration: '48 horas',
-            coverage: 'R$ 50.000',
-            rating: 4.8,
-            popular: true,
-            recommended: true,
-            trending: true,
-            category: 'acidentes',
-            coverageAmount: 50000,
-            minDuration: 12,
-            maxDuration: 48,
-            features: ['Ativação instantânea', 'Cobertura 24/7', 'Sem burocracia', 'Pagamento via PIX']
-          },
-          {
-            id: '2',
-            name: 'Saúde Emergencial',
-            description: 'Proteção para emergências médicas e hospitalares com cobertura nacional',
-            basePrice: 8.90,
-            duration: '24 horas',
-            coverage: 'R$ 100.000',
-            rating: 4.9,
-            popular: true,
-            recommended: true,
-            category: 'saude',
-            coverageAmount: 100000,
-            minDuration: 12,
-            maxDuration: 48,
-            features: ['Rede nacional', 'Emergências 24h', 'Ambulância inclusa', 'Sem carência']
-          },
-          {
-            id: '3',
-            name: 'Viagem Express',
-            description: 'Seguro para viagens curtas e deslocamentos urbanos com cobertura internacional',
-            basePrice: 4.90,
-            duration: '72 horas',
-            coverage: 'R$ 75.000',
-            rating: 4.7,
-            recommended: true,
-            category: 'viagem',
-            coverageAmount: 75000,
-            minDuration: 24,
-            maxDuration: 72,
-            features: ['Cobertura internacional', 'Bagagem protegida', 'Cancelamento', 'Assistência 24h']
-          },
-          {
-            id: '4',
-            name: 'Diária Autônomos',
-            description: 'Proteção para profissionais autônomos durante atividades diárias de trabalho',
-            basePrice: 2.50,
-            duration: '24 horas',
-            coverage: 'R$ 30.000',
-            rating: 4.6,
-            category: 'trabalho',
-            coverageAmount: 30000,
-            minDuration: 8,
-            maxDuration: 24,
-            features: ['Proteção no trabalho', 'Equipamentos inclusos', 'Renda diária', 'Flexibilidade']
-          },
-          {
-            id: '5',
-            name: 'Eventos Esportivos',
-            description: 'Cobertura especializada para atividades esportivas e recreativas',
-            basePrice: 5.50,
-            duration: '12 horas',
-            coverage: 'R$ 40.000',
-            rating: 4.7,
-            category: 'esporte',
-            coverageAmount: 40000,
-            minDuration: 2,
-            maxDuration: 12,
-            features: ['Esportes radicais', 'Equipamentos', 'Lesões cobertas', 'Competições']
-          },
-          {
-            id: '6',
-            name: 'Proteção Residencial',
-            description: 'Cobertura para danos em residência e bens pessoais',
-            basePrice: 6.50,
-            duration: '48 horas',
-            coverage: 'R$ 80.000',
-            rating: 4.5,
-            category: 'residencial',
-            coverageAmount: 80000,
-            minDuration: 24,
-            maxDuration: 72,
-            features: ['Bens pessoais', 'Responsabilidade civil', 'Incêndio', 'Roubo']
-          },
-          {
-            id: '7',
-            name: 'Transporte Público',
-            description: 'Proteção durante uso de transporte público urbano',
-            basePrice: 1.90,
-            duration: '8 horas',
-            coverage: 'R$ 25.000',
-            rating: 4.4,
-            category: 'transporte',
-            coverageAmount: 25000,
-            minDuration: 4,
-            maxDuration: 8,
-            features: ['Transporte público', 'Acidentes de trânsito', 'Ativação automática', 'Baixo custo']
-          },
-          {
-            id: '8',
-            name: 'Eventos Corporativos',
-            description: 'Cobertura para eventos empresariais e corporativos',
-            basePrice: 12.00,
-            duration: '24 horas',
-            coverage: 'R$ 150.000',
-            rating: 4.8,
-            category: 'corporativo',
-            coverageAmount: 150000,
-            minDuration: 8,
-            maxDuration: 48,
-            features: ['Eventos corporativos', 'Alta cobertura', 'Equipe protegida', 'Responsabilidade']
-          },
-          {
-            id: '9',
-            name: 'Proteção Pet',
-            description: 'Cobertura para emergências veterinárias e cuidados com pets',
-            basePrice: 7.50,
-            duration: '24 horas',
-            coverage: 'R$ 35.000',
-            rating: 4.6,
-            new: true,
-            category: 'pet',
-            coverageAmount: 35000,
-            minDuration: 12,
-            maxDuration: 48,
-            features: ['Emergências veterinárias', 'Cirurgias', 'Medicamentos', 'Consultas']
-          },
-          {
-            id: '10',
-            name: 'Cybersecurity',
-            description: 'Proteção contra crimes digitais e fraudes online',
-            basePrice: 9.90,
-            duration: '48 horas',
-            coverage: 'R$ 60.000',
-            rating: 4.7,
-            new: true,
-            category: 'digital',
-            coverageAmount: 60000,
-            minDuration: 24,
-            maxDuration: 72,
-            features: ['Fraudes online', 'Roubo de dados', 'Assistência técnica', 'Recuperação']
-          }
-        ];
-        
-        setProducts(mockProducts);
-        setFilteredProducts(mockProducts);
+        const productsData = await ProductsService.getAllProducts();
+        setProducts(productsData);
+        setFilteredProducts(productsData);
       } catch (error) {
         toast({
           title: "Erro ao carregar produtos",
@@ -294,20 +125,43 @@ const Products: React.FC = () => {
     return products.filter(product => product.new);
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'acidentes': return <Shield className="w-4 h-4" />;
-      case 'saude': return <Heart className="w-4 h-4" />;
-      case 'viagem': return <ArrowRight className="w-4 h-4" />;
-      case 'trabalho': return <Users className="w-4 h-4" />;
-      case 'esporte': return <Zap className="w-4 h-4" />;
-      case 'residencial': return <Shield className="w-4 h-4" />;
-      case 'transporte': return <ArrowRight className="w-4 h-4" />;
-      case 'corporativo': return <Award className="w-4 h-4" />;
-      case 'pet': return <Heart className="w-4 h-4" />;
-      case 'digital': return <Shield className="w-4 h-4" />;
-      default: return <Shield className="w-4 h-4" />;
+  const getCategoryIcon = (category: string, code?: string) => {
+    // Primeiro tenta mapear pela categoria/coverage_type
+    switch (category?.toLowerCase()) {
+      case 'fixed':
+      case 'acidentes':
+        return <Shield className="w-4 h-4" />;
+      case 'daily':
+      case 'saude':
+        return <Heart className="w-4 h-4" />;
+      case 'viagem':
+        return <ArrowRight className="w-4 h-4" />;
+      case 'trabalho':
+        return <Users className="w-4 h-4" />;
+      case 'esporte':
+        return <Zap className="w-4 h-4" />;
+      case 'residencial':
+        return <Shield className="w-4 h-4" />;
+      case 'transporte':
+        return <ArrowRight className="w-4 h-4" />;
+      case 'corporativo':
+        return <Award className="w-4 h-4" />;
+      case 'pet':
+        return <Heart className="w-4 h-4" />;
+      case 'digital':
+        return <Shield className="w-4 h-4" />;
     }
+    
+    // Fallback baseado no código do produto
+    if (code?.includes('ACCIDENT')) return <Shield className="w-4 h-4" />;
+    if (code?.includes('TRAVEL')) return <ArrowRight className="w-4 h-4" />;
+    if (code?.includes('HEALTH')) return <Heart className="w-4 h-4" />;
+    if (code?.includes('INCOME')) return <Users className="w-4 h-4" />;
+    if (code?.includes('PROPERTY')) return <Shield className="w-4 h-4" />;
+    if (code?.includes('LIFE')) return <Heart className="w-4 h-4" />;
+    if (code?.includes('DISABILITY')) return <Users className="w-4 h-4" />;
+    
+    return <Shield className="w-4 h-4" />;
   };
 
   if (loading) {
@@ -361,7 +215,7 @@ const Products: React.FC = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-2">
                     <Badge variant="outline" className="text-xs flex items-center gap-1">
-                      {getCategoryIcon(product.category)}
+                      {getCategoryIcon(product.category, product.code)}
                       {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                     </Badge>
                   </div>
@@ -619,7 +473,7 @@ const Products: React.FC = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-2">
                     <Badge variant="outline" className="text-xs flex items-center gap-1">
-                      {getCategoryIcon(product.category)}
+                      {getCategoryIcon(product.category, product.code)}
                       {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                     </Badge>
                     {product.popular && (

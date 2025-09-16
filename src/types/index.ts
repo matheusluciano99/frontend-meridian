@@ -7,6 +7,7 @@ export interface User {
 
 export interface Product {
   id: string;
+  code?: string;
   name: string;
   description: string;
   basePrice: number;
@@ -18,6 +19,10 @@ export interface Product {
   coverageAmount: number;
   minDuration: number;
   maxDuration: number;
+  features: string[];
+  recommended?: boolean;
+  trending?: boolean;
+  new?: boolean;
 }
 
 export interface ProductDetails extends Product {
