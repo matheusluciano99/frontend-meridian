@@ -21,12 +21,15 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProductsService } from '@/services/productsService';
+import { PoliciesService } from '@/services/policiesService';
 import { Product } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [duration, setDuration] = useState([24]);
@@ -82,44 +85,41 @@ const ProductDetail: React.FC = () => {
   };
 
   const handleActivate = async () => {
-    if (!product) return;
+    if (!product || !user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado ou produto não encontrado.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setActivating(true);
     try {
-      // Mock API calls
-      // 1. Create policy
-      const policyResponse = await fetch('/api/policies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product.id,
-          duration: duration[0],
-          price: calculatePrice()
-        })
+      // 1. Criar apólice
+      const policy = await PoliciesService.create({
+        userId: user.id,
+        productId: product.id
       });
 
-      if (!policyResponse.ok) throw new Error('Failed to create policy');
-      
-      const policy = await policyResponse.json();
-      
-      // 2. Activate policy
-      const activateResponse = await fetch(`/api/policies/${policy.id}/activate`, {
-        method: 'POST'
-      });
+      // 2. Ativar apólice
+      const activatedPolicy = await PoliciesService.activate(policy.id);
 
-      if (!activateResponse.ok) throw new Error('Failed to activate policy');
-
-      // 3. Redirect to checkout
-      navigate(`/checkout/${policy.id}`);
-      
-    } catch (error) {
-      // For demo, simulate success
-      await new Promise(resolve => setTimeout(resolve, 2000));
       toast({
         title: "Seguro ativado com sucesso!",
-        description: "Redirecionando para o checkout...",
+        description: `Apólice ${activatedPolicy.policy_number} está ativa.`,
       });
+
+      // 3. Redirecionar para cobertura
       navigate('/coverage');
+      
+    } catch (error: any) {
+      console.error('Erro ao ativar seguro:', error);
+      toast({
+        title: "Erro ao ativar seguro",
+        description: error.message || "Não foi possível ativar o seguro. Tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setActivating(false);
     }
@@ -397,11 +397,14 @@ const ProductDetail: React.FC = () => {
                   className="w-full gradient-primary text-white font-medium py-3 h-auto"
                 >
                   {activating ? (
-                    "Ativando..."
+                    <>
+                      <Zap className="w-4 h-4 mr-2 animate-pulse" />
+                      Comprando e Ativando...
+                    </>
                   ) : (
                     <>
                       <Zap className="w-4 h-4 mr-2" />
-                      Ativar Agora - R$ {product.basePrice.toFixed(2)}
+                      Comprar e Ativar - R$ {product.basePrice.toFixed(2)}
                     </>
                   )}
                 </Button>
@@ -417,7 +420,7 @@ const ProductDetail: React.FC = () => {
                   className="w-full mt-3"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Outros Pagamentos
+                  Outras Formas de Pagamento
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground mt-2">
