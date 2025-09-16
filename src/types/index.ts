@@ -116,4 +116,5 @@ export interface AnchorTransaction {
   memo?: string;
   created_at: string;
   updated_at: string;
+  extra?: any; // contém collectPremiumTx, activatePolicyTx, chainError
 }

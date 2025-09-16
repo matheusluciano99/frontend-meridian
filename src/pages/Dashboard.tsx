@@ -195,8 +195,8 @@ const Dashboard: React.FC = () => {
           <Card className="glass-card border-border/50">
             <CardContent className="p-6 text-center">
               <DollarSign className="w-8 h-8 text-success mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gradient-primary">R$ 2,50+</div>
-              <p className="text-muted-foreground">Starting from</p>
+              <div className="text-2xl font-bold text-gradient-primary">0.5 XLM+</div>
+              <p className="text-muted-foreground">Entry premium</p>
             </CardContent>
           </Card>
         </div>
@@ -204,16 +204,28 @@ const Dashboard: React.FC = () => {
         {/* Wallet / Anchor Section */}
         {user && (
           <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-4">Minha Carteira</h2>
+            <h2 className="text-2xl font-bold mb-4">Wallet & On-chain</h2>
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-3">
-                  <CardTitle>Saldo (derivado)</CardTitle>
-                  <CardDescription>Soma de depósitos concluídos</CardDescription>
+                  <CardTitle>Balance (derived)</CardTitle>
+                  <CardDescription>Completed deposits (XLM)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">R$ {anchorBalance.toFixed(2)}</p>
-                  <Button size="sm" variant="outline" className="mt-4" onClick={refreshAnchor}>Atualizar</Button>
+                  <p className="text-3xl font-bold">{anchorBalance.toFixed(2)} XLM</p>
+                  <Button size="sm" variant="outline" className="mt-4" onClick={refreshAnchor}>Refresh</Button>
+                </CardContent>
+              </Card>
+
+              {/* Risk Pool balance placeholder (populado via useEffect patch posterior) */}
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle>Risk Pool</CardTitle>
+                  <CardDescription>Pool balance (XLM)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{/* poolBalance */}</p>
+                  <p className="text-xs text-muted-foreground">auto-updated</p>
                 </CardContent>
               </Card>
 
@@ -224,7 +236,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <form onSubmit={handleDeposit} className="flex flex-col md:flex-row gap-4 items-start md:items-end">
                     <div className="flex-1">
-                      <label className="text-sm mb-1 block">Valor (R$)</label>
+                      <label className="text-sm mb-1 block">Amount (XLM)</label>
                       <Input value={depositAmount} onChange={e => setDepositAmount(e.target.value)} placeholder="100.00" />
                     </div>
                     <Button type="submit" disabled={walletLoading}>{walletLoading ? 'Enviando...' : 'Depositar'}</Button>
@@ -236,8 +248,8 @@ const Dashboard: React.FC = () => {
 
             <Card className="glass-card border-border/50">
               <CardHeader className="pb-3">
-                <CardTitle>Transações</CardTitle>
-                <CardDescription>Histórico Anchor</CardDescription>
+                <CardTitle>Transactions</CardTitle>
+                <CardDescription>Anchor & on-chain hashes</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto -mx-2 md:mx-0">
@@ -246,22 +258,38 @@ const Dashboard: React.FC = () => {
                       <tr className="text-left text-muted-foreground border-b border-border/40">
                         <th className="py-2 pr-4">ID</th>
                         <th className="py-2 pr-4">Tipo</th>
-                        <th className="py-2 pr-4">Valor</th>
+                        <th className="py-2 pr-4">Amount (XLM)</th>
                         <th className="py-2 pr-4">Status</th>
+                        <th className="py-2 pr-4">On-chain</th>
                         <th className="py-2 pr-4">Criado</th>
                       </tr>
                     </thead>
                     <tbody>
                       {anchorTxs.length === 0 && (
-                        <tr><td colSpan={5} className="py-4 text-center text-muted-foreground">Nenhuma transação</td></tr>
+                        <tr><td colSpan={6} className="py-4 text-center text-muted-foreground">Nenhuma transação</td></tr>
                       )}
                       {anchorTxs.map(tx => (
                         <tr key={tx.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
                           <td className="py-2 pr-4 max-w-[140px] truncate" title={tx.id}>{tx.id}</td>
                           <td className="py-2 pr-4 capitalize">{tx.type}</td>
-                          <td className="py-2 pr-4">R$ {parseFloat(String(tx.amount)).toFixed(2)}</td>
+                          <td className="py-2 pr-4">{parseFloat(String(tx.amount)).toFixed(2)}</td>
                           <td className="py-2 pr-4">
                             <Badge variant={tx.status === 'COMPLETED' ? 'default' : tx.status === 'PENDING' ? 'outline' : 'secondary'}>{tx.status}</Badge>
+                          </td>
+                          <td className="py-2 pr-4">
+                            {tx.extra?.collectPremiumTx || tx.extra?.activatePolicyTx ? (
+                              <div className="flex flex-col gap-1">
+                                {tx.extra?.collectPremiumTx && (
+                                  <span className="inline-flex items-center gap-1 text-xs" title={tx.extra.collectPremiumTx}>collect</span>
+                                )}
+                                {tx.extra?.activatePolicyTx && (
+                                  <span className="inline-flex items-center gap-1 text-xs" title={tx.extra.activatePolicyTx}>policy</span>
+                                )}
+                                {tx.extra?.chainError && (
+                                  <span className="text-xs text-destructive" title={tx.extra.chainError}>err</span>
+                                )}
+                              </div>
+                            ) : <span className="text-xs text-muted-foreground">-</span>}
                           </td>
                           <td className="py-2 pr-4">{new Date(tx.created_at).toLocaleString()}</td>
                         </tr>
