@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { CoveragesService } from '@/services/coveragesService';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ActiveCoverage {
   id: string;
@@ -49,84 +51,14 @@ const Coverage: React.FC = () => {
   const [pauseLoading, setPauseLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    // Mock fetch active coverages
     const fetchActiveCoverages = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Mock multiple coverage data
-        const mockCoverages: ActiveCoverage[] = [
-          {
-            id: 'policy_123',
-            productName: 'Acidentes 48h',
-            status: 'ACTIVE',
-            startTime: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-            endTime: new Date(Date.now() + 42 * 60 * 60 * 1000), // 42 hours from now
-            totalCost: 4.50,
-            accumulatedCost: 0.56,
-            coverage: 'R$ 50.000',
-            stellarTxHash: 'abc123def456789stellartxhash',
-            category: 'acidentes',
-            coverageAmount: 50000,
-            popular: true
-          },
-          {
-            id: 'policy_456',
-            productName: 'Viagem Express',
-            status: 'ACTIVE',
-            startTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-            endTime: new Date(Date.now() + 70 * 60 * 60 * 1000), // 70 hours from now
-            totalCost: 8.90,
-            accumulatedCost: 0.25,
-            coverage: 'R$ 75.000',
-            stellarTxHash: 'def456ghi789012stellartxhash',
-            category: 'viagem',
-            coverageAmount: 75000
-          },
-          {
-            id: 'policy_789',
-            productName: 'Saúde Emergencial',
-            status: 'PAUSED',
-            startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
-            endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-            totalCost: 12.00,
-            accumulatedCost: 6.00,
-            coverage: 'R$ 100.000',
-            stellarTxHash: 'ghi789jkl012345stellartxhash',
-            category: 'saude',
-            coverageAmount: 100000
-          },
-          {
-            id: 'policy_101',
-            productName: 'Eventos Esportivos',
-            status: 'EXPIRED',
-            startTime: new Date(Date.now() - 48 * 60 * 60 * 1000), // 48 hours ago
-            endTime: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-            totalCost: 5.50,
-            accumulatedCost: 5.50,
-            coverage: 'R$ 40.000',
-            stellarTxHash: 'jkl012mno345678stellartxhash',
-            category: 'esporte',
-            coverageAmount: 40000
-          },
-          {
-            id: 'policy_202',
-            productName: 'Proteção Residencial',
-            status: 'ACTIVE',
-            startTime: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-            endTime: new Date(Date.now() + 36 * 60 * 60 * 1000), // 36 hours from now
-            totalCost: 6.50,
-            accumulatedCost: 1.63,
-            coverage: 'R$ 80.000',
-            stellarTxHash: 'mno345pqr678901stellartxhash',
-            category: 'residencial',
-            coverageAmount: 80000
-          }
-        ];
-        
-        setCoverages(mockCoverages);
-        setFilteredCoverages(mockCoverages);
+        const coveragesData = await CoveragesService.getUserCoverages(user?.id);
+        setCoverages(coveragesData);
+        setFilteredCoverages(coveragesData);
       } catch (error) {
         toast({
           title: "Erro ao carregar coberturas",
@@ -138,8 +70,12 @@ const Coverage: React.FC = () => {
       }
     };
 
-    fetchActiveCoverages();
-  }, [toast]);
+    if (user?.id) {
+      fetchActiveCoverages();
+    } else {
+      setLoading(false);
+    }
+  }, [toast, user?.id]);
 
   // Filter coverages based on search and filters
   useEffect(() => {
@@ -169,15 +105,14 @@ const Coverage: React.FC = () => {
   const handlePauseCoverage = async (coverageId: string) => {
     setPauseLoading(coverageId);
     try {
-      // Mock API call to pause coverage
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setCoverages(prev => prev.map(coverage => 
-        coverage.id === coverageId 
+      await CoveragesService.pauseCoverage(coverageId);
+
+      setCoverages(prev => prev.map(coverage =>
+        coverage.id === coverageId
           ? { ...coverage, status: 'PAUSED' as const }
           : coverage
       ));
-      
+
       toast({
         title: "Cobertura pausada",
         description: "Sua cobertura foi pausada com sucesso.",
@@ -196,15 +131,14 @@ const Coverage: React.FC = () => {
   const handleResumeCoverage = async (coverageId: string) => {
     setPauseLoading(coverageId);
     try {
-      // Mock API call to resume coverage
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setCoverages(prev => prev.map(coverage => 
-        coverage.id === coverageId 
+      await CoveragesService.resumeCoverage(coverageId);
+
+      setCoverages(prev => prev.map(coverage =>
+        coverage.id === coverageId
           ? { ...coverage, status: 'ACTIVE' as const }
           : coverage
       ));
-      
+
       toast({
         title: "Cobertura reativada",
         description: "Sua cobertura foi reativada com sucesso.",
@@ -268,6 +202,13 @@ const Coverage: React.FC = () => {
           <Badge variant="secondary" className="bg-destructive text-destructive-foreground">
             <AlertCircle className="w-3 h-3 mr-1" />
             Expirado
+          </Badge>
+        );
+      case 'CANCELLED':
+        return (
+          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Cancelado
           </Badge>
         );
       default:

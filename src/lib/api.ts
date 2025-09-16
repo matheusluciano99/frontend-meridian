@@ -27,6 +27,11 @@ export const api = {
   products: {
     getAll: () => api.request<Product[]>('/products'),
   },
+  policies: {
+    getAll: (userId?: string) => api.request<any[]>(`/policies${userId ? `?userId=${userId}` : ''}`),
+    pause: (id: string) => api.request<any>(`/policies/${id}/pause`, { method: 'POST' }),
+    activate: (id: string) => api.request<any>(`/policies/${id}/activate`, { method: 'POST' }),
+  },
 };
 
 // Tipos da API (baseados no backend)
