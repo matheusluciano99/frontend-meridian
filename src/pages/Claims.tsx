@@ -12,6 +12,7 @@ import { FileText, Plus, Eye, MessageCircle, Calendar, DollarSign, CheckCircle, 
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimsService, ClaimUI } from '@/services/claimsService';
+import { PoliciesService, Policy } from '@/services/policiesService';
 
 interface ClaimMessage { id: string; claimId: string; sender: 'user' | 'support'; message: string; timestamp: Date; }
 
@@ -19,6 +20,7 @@ const Claims: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [claims, setClaims] = useState<ClaimUI[]>([]);
+  const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,17 +30,26 @@ const Claims: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [newClaim, setNewClaim] = useState({ claimType: '', description: '', incidentDate: '', claimAmount: '', policyId: '' });
   const [claimDocuments, setClaimDocuments] = useState<File[]>([]);
+  const [eligibleProductCodes, setEligibleProductCodes] = useState<string[]>(['INCOME_PER_DIEM']); // Fallback padrão
 
-  useEffect(() => { if (user?.id) fetchClaims(); }, [user?.id]);
+  useEffect(() => { if (user?.id) fetchData(); }, [user?.id]);
 
-  const fetchClaims = async () => {
+  const fetchData = async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const data = await ClaimsService.list(user.id);
-      setClaims(data);
+      // Buscar claims, policies e produtos elegíveis em paralelo
+      const [claimsData, policiesData, eligibleProductsData] = await Promise.all([
+        ClaimsService.list(user.id),
+        PoliciesService.getUserPolicies(user.id),
+        ClaimsService.getEligibleProducts()
+      ]);
+      
+      setClaims(claimsData);
+      setPolicies(policiesData);
+      setEligibleProductCodes(eligibleProductsData.allowedProducts);
     } catch (e: any) {
-      toast({ title: 'Erro ao carregar sinistros', description: e.message || 'Falha na requisição', variant: 'destructive' });
+      toast({ title: 'Erro ao carregar dados', description: e.message || 'Falha na requisição', variant: 'destructive' });
     } finally { setLoading(false); }
   };
 
@@ -53,8 +64,8 @@ const Claims: React.FC = () => {
   const handleSubmitClaim = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) { toast({ title: 'Sessão inválida', description: 'Usuário não autenticado', variant: 'destructive' }); return; }
-    if (!newClaim.claimType || !newClaim.description || !newClaim.incidentDate || !newClaim.claimAmount) {
-      toast({ title: 'Campos obrigatórios', description: 'Preencha todos os campos.', variant: 'destructive' }); return; }
+    if (!newClaim.claimType || !newClaim.description || !newClaim.incidentDate || !newClaim.claimAmount || !newClaim.policyId) {
+      toast({ title: 'Campos obrigatórios', description: 'Preencha todos os campos obrigatórios.', variant: 'destructive' }); return; }
     setSubmitting(true);
     try {
       const created = await ClaimsService.create(user.id, { policyId: newClaim.policyId || '', claimType: newClaim.claimType, description: newClaim.description, incidentDate: newClaim.incidentDate, claimAmount: parseFloat(newClaim.claimAmount) });
@@ -62,7 +73,9 @@ const Claims: React.FC = () => {
       setNewClaim({ claimType: '', description: '', incidentDate: '', claimAmount: '', policyId: '' });
       setClaimDocuments([]);
       toast({ title: 'Sinistro criado', description: `Sinistro ${created.claimNumber} enviado.` });
-    } catch (e: any) { toast({ title: 'Erro ao criar', description: e.message || 'Falha na criação', variant: 'destructive' }); }
+    } catch (e: any) { 
+      toast({ title: 'Erro ao criar', description: e.message || 'Falha na criação', variant: 'destructive' }); 
+    }
     finally { setSubmitting(false); }
   };
 
@@ -96,6 +109,14 @@ const Claims: React.FC = () => {
 
   const getClaimTypeLabel = (t: string) => t === 'income_loss' ? 'Perda de Renda' : t;
 
+  // Função para verificar se uma apólice permite sinistros
+  const isPolicyEligibleForClaims = (policy: Policy) => {
+    return policy.status === 'ACTIVE' && eligibleProductCodes.includes(policy.product?.code || '');
+  };
+
+  // Contar apólices elegíveis
+  const eligiblePolicies = policies.filter(isPolicyEligibleForClaims);
+
   const filteredClaims = claims.filter(c => {
     const search = searchTerm.toLowerCase();
     const matchesSearch = c.claimNumber.toLowerCase().includes(search) || c.description.toLowerCase().includes(search);
@@ -123,43 +144,51 @@ const Claims: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Claims</h1>
+            <h1 className="text-3xl font-bold mb-2">Sinistros</h1>
             <p className="text-muted-foreground">
-              Manage your claims and track request status
+              Gerencie seus sinistros e acompanhe o status das solicitações
             </p>
+            {eligiblePolicies.length === 0 && policies.filter(p => p.status === 'ACTIVE').length > 0 && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Informação:</strong> No MVP, apenas apólices dos seguintes tipos permitem sinistros: {eligibleProductCodes.join(', ')}. 
+                  Você tem {policies.filter(p => p.status === 'ACTIVE').length} apólice(s) ativa(s), mas nenhuma elegível para sinistros.
+                </p>
+              </div>
+            )}
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="gradient-primary">
+              <Button className="gradient-primary" disabled={eligiblePolicies.length === 0}>
                 <Plus className="w-4 h-4 mr-2" />
-                New Claim
+                Novo Sinistro
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>New Claim</DialogTitle>
+                <DialogTitle>Novo Sinistro</DialogTitle>
                 <DialogDescription>
-                  Fill in the claim data and attach the necessary documents
+                  Preencha os dados do sinistro e anexe os documentos necessários
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmitClaim} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="claimType">Claim Type *</Label>
+                    <Label htmlFor="claimType">Tipo de Sinistro *</Label>
                     <Select value={newClaim.claimType} onValueChange={(value) => setNewClaim(prev => ({ ...prev, claimType: value }))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="accident">Accident</SelectItem>
-                        <SelectItem value="medical">Medical Expenses</SelectItem>
-                        <SelectItem value="income_loss">Income Loss</SelectItem>
-                        <SelectItem value="property">Property Damage</SelectItem>
+                        <SelectItem value="accident">Acidente</SelectItem>
+                        <SelectItem value="medical">Despesas Médicas</SelectItem>
+                        <SelectItem value="income_loss">Perda de Renda</SelectItem>
+                        <SelectItem value="property">Danos Materiais</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="incidentDate">Incident Date *</Label>
+                    <Label htmlFor="incidentDate">Data do Incidente *</Label>
                     <Input
                       id="incidentDate"
                       type="date"
@@ -169,7 +198,7 @@ const Claims: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="claimAmount">Claim Amount (R$) *</Label>
+                    <Label htmlFor="claimAmount">Valor do Sinistro (R$) *</Label>
                     <Input
                       id="claimAmount"
                       type="number"
@@ -182,33 +211,45 @@ const Claims: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="policyId">Policy ID</Label>
-                    <Input
-                      id="policyId"
-                      value={newClaim.policyId}
-                      onChange={(e) => setNewClaim(prev => ({ ...prev, policyId: e.target.value }))}
-                      placeholder="policy_123"
-                    />
+                    <Label htmlFor="policyId">Apólice *</Label>
+                    <Select value={newClaim.policyId} onValueChange={(value) => setNewClaim(prev => ({ ...prev, policyId: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma apólice" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eligiblePolicies.map(policy => (
+                            <SelectItem key={policy.id} value={policy.id}>
+                              {policy.policy_number} - {policy.product?.name || 'Produto'} (R$ {policy.coverage_amount.toFixed(2)})
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                    {eligiblePolicies.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma apólice elegível para sinistros encontrada. No MVP, apenas apólices dos seguintes tipos permitem sinistros: {eligibleProductCodes.join(', ')}.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Claim Description *</Label>
+                  <Label htmlFor="description">Descrição do Sinistro *</Label>
                   <Textarea
                     id="description"
                     value={newClaim.description}
                     onChange={(e) => setNewClaim(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe in detail what happened..."
+                    placeholder="Descreva em detalhes o que aconteceu..."
                     rows={4}
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Attached Documents</Label>
+                  <Label>Documentos Anexados</Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                     <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground mb-2">
-                      Send photos, PDFs or other related documents
+                      Envie fotos, PDFs ou outros documentos relacionados
                     </p>
                     <input
                       type="file"
@@ -224,14 +265,14 @@ const Claims: React.FC = () => {
                       asChild
                     >
                       <label htmlFor="claim-documents" className="cursor-pointer">
-                        Select Files
+                        Selecionar Arquivos
                       </label>
                     </Button>
                   </div>
                   
                   {claimDocuments.length > 0 && (
                     <div className="space-y-2">
-                      <Label>Selected Files</Label>
+                      <Label>Arquivos Selecionados</Label>
                       <div className="space-y-2">
                         {claimDocuments.map((file, index) => (
                           <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
@@ -254,7 +295,7 @@ const Claims: React.FC = () => {
                 
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" className="flex-1" disabled={submitting}>
-                    {submitting ? 'Submitting...' : 'Submit Claim'}
+                    {submitting ? 'Enviando...' : 'Enviar Sinistro'}
                   </Button>
                 </div>
               </form>
@@ -266,7 +307,7 @@ const Claims: React.FC = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search by number or description..."
+                placeholder="Buscar por número ou descrição..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -275,15 +316,15 @@ const Claims: React.FC = () => {
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="submitted">Submitted</SelectItem>
-              <SelectItem value="under_review">Under Review</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="submitted">Enviado</SelectItem>
+              <SelectItem value="under_review">Em Análise</SelectItem>
+              <SelectItem value="approved">Aprovado</SelectItem>
+              <SelectItem value="rejected">Rejeitado</SelectItem>
+              <SelectItem value="paid">Pago</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -316,11 +357,11 @@ const Claims: React.FC = () => {
         {filteredClaims.length === 0 && (
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No claims found</h3>
+            <h3 className="text-lg font-medium mb-2">Nenhum sinistro encontrado</h3>
             <p className="text-muted-foreground">
               {searchTerm || statusFilter !== 'all' 
-                ? 'Try adjusting the search filters.'
-                : 'You don\'t have any registered claims yet.'}
+                ? 'Tente ajustar os filtros de busca.'
+                : 'Você ainda não tem sinistros registrados.'}
             </p>
           </div>
         )}
@@ -333,7 +374,7 @@ const Claims: React.FC = () => {
                   Chat - {selectedClaim.claimNumber}
                 </DialogTitle>
                 <DialogDescription>
-                  Chat with our team about this claim
+                  Converse com nossa equipe sobre este sinistro
                 </DialogDescription>
               </DialogHeader>
               <div className="flex-1 flex flex-col min-h-0">
@@ -349,7 +390,7 @@ const Claims: React.FC = () => {
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Type your message..."
+                    placeholder="Digite sua mensagem..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
