@@ -66,13 +66,29 @@ const Claims: React.FC = () => {
     if (!user?.id) { toast({ title: 'Invalid session', description: 'User not authenticated', variant: 'destructive' }); return; }
     if (!newClaim.claimType || !newClaim.description || !newClaim.incidentDate || !newClaim.claimAmount || !newClaim.policyId) {
       toast({ title: 'Required fields', description: 'Please fill in all required fields.', variant: 'destructive' }); return; }
+    
+    // Validação adicional: data do incidente não pode ser no futuro
+    const incidentDate = new Date(newClaim.incidentDate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Fim do dia
+    if (incidentDate > today) {
+      toast({ title: 'Invalid date', description: 'Incident date cannot be in the future.', variant: 'destructive' }); return; }
+    
+    // Validação: valor do sinistro deve ser positivo
+    const amount = parseFloat(newClaim.claimAmount);
+    if (amount <= 0) {
+      toast({ title: 'Invalid amount', description: 'Claim amount must be greater than zero.', variant: 'destructive' }); return; }
+    
     setSubmitting(true);
     try {
-      const created = await ClaimsService.create(user.id, { policyId: newClaim.policyId || '', claimType: newClaim.claimType, description: newClaim.description, incidentDate: newClaim.incidentDate, claimAmount: parseFloat(newClaim.claimAmount) });
+      const created = await ClaimsService.create(user.id, { policyId: newClaim.policyId || '', claimType: newClaim.claimType, description: newClaim.description, incidentDate: newClaim.incidentDate, claimAmount: amount });
       setClaims(prev => [created, ...prev]);
       setNewClaim({ claimType: '', description: '', incidentDate: '', claimAmount: '', policyId: '' });
       setClaimDocuments([]);
-      toast({ title: 'Claim created', description: `Claim ${created.claimNumber} submitted.` });
+      toast({ 
+        title: 'Claim submitted successfully!', 
+        description: `Your claim ${created.claimNumber} has been submitted and is under review. You'll be notified of updates.` 
+      });
     } catch (e: any) { 
       toast({ title: 'Error creating', description: e.message || 'Creation failed', variant: 'destructive' }); 
     }
@@ -111,7 +127,7 @@ const Claims: React.FC = () => {
 
   // Função para verificar se uma apólice permite sinistros
   const isPolicyEligibleForClaims = (policy: Policy) => {
-    return policy.status === 'ACTIVE' && eligibleProductCodes.includes(policy.product?.code || '');
+    return policy.status === 'ACTIVE';
   };
 
   // Contar apólices elegíveis
@@ -151,8 +167,18 @@ const Claims: React.FC = () => {
             {eligiblePolicies.length === 0 && policies.filter(p => p.status === 'ACTIVE').length > 0 && (
               <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Information:</strong> In the MVP, only policies of the following types allow claims: {eligibleProductCodes.join(', ')}. 
                   You have {policies.filter(p => p.status === 'ACTIVE').length} active policie(s), but none eligible for claims.
+                </p>
+                <p className="text-sm text-blue-800 mt-2">
+                  <strong>Tip:</strong> Contact support if you need to change your policy type or have questions about claim eligibility.
+                </p>
+              </div>
+            )}
+            {eligiblePolicies.length === 0 && policies.length === 0 && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>No policies found:</strong> You need an active policy to submit claims. 
+                  <a href="/products" className="underline">Browse available products</a> to get coverage.
                 </p>
               </div>
             )}
@@ -171,6 +197,30 @@ const Claims: React.FC = () => {
                   Fill in the claim details and attach the necessary documents
                 </DialogDescription>
               </DialogHeader>
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground mb-2">Quick options for common claims:</p>
+                <div className="flex gap-2 flex-wrap">
+                  {eligiblePolicies.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        setNewClaim({
+                          claimType: 'income_loss',
+                          description: 'Temporary loss of income due to unforeseen circumstances',
+                          incidentDate: today,
+                          claimAmount: '100.00', // Valor padrão, usuário pode ajustar
+                          policyId: eligiblePolicies[0].id
+                        });
+                      }}
+                    >
+                      Quick Income Loss Claim
+                    </Button>
+                  )}
+                </div>
+              </div>
               <form onSubmit={handleSubmitClaim} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">

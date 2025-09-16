@@ -169,8 +169,7 @@ export class ClaimsService {
       return await response.json();
     } catch (error) {
       console.error('Erro ao buscar produtos elegíveis:', error);
-      // Fallback para o valor padrão se a API falhar
-      return { allowedProducts: ['INCOME_PER_DIEM'], message: 'Produtos que permitem sinistros no MVP' };
+      throw new Error('Não foi possível carregar os produtos elegíveis para sinistros.');
     }
   }
 }
