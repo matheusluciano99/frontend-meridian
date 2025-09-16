@@ -13,32 +13,22 @@ import {
   ArrowLeft,
   Calculator,
   Zap,
-  CreditCard
+  CreditCard,
+  Star,
+  Home,
+  ChevronRight,
+  Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface ProductDetails {
-  id: string;
-  name: string;
-  description: string;
-  longDescription: string;
-  basePrice: number;
-  pricePerHour: number;
-  minDuration: number;
-  maxDuration: number;
-  coverage: string;
-  benefits: string[];
-  exclusions: string[];
-  rating: number;
-  popular?: boolean;
-}
+import { ProductsService } from '@/services/productsService';
+import { Product } from '@/types';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [duration, setDuration] = useState([24]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(false);
@@ -46,40 +36,17 @@ const ProductDetail: React.FC = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        // Mock API call - replace with actual endpoint
-        const mockProducts: { [key: string]: ProductDetails } = {
-          '1': {
-            id: '1',
-            name: 'Acidentes 48h',
-            description: 'Cobertura completa para acidentes pessoais nas próximas 48 horas',
-            longDescription: 'Este produto oferece proteção abrangente contra acidentes pessoais que possam ocorrer nas próximas 48 horas. Ideal para quem busca segurança em atividades do dia a dia, trabalho ou lazer.',
-            basePrice: 3.00,
-            pricePerHour: 0.0625,
-            minDuration: 12,
-            maxDuration: 48,
-            coverage: 'R$ 50.000',
-            benefits: [
-              'Cobertura para acidentes pessoais',
-              'Indenização por morte acidental',
-              'Invalidez permanente total ou parcial',
-              'Despesas médicas e hospitalares',
-              'Atendimento 24h via telefone',
-              'Ativação instantânea via blockchain'
-            ],
-            exclusions: [
-              'Atos intencionais ou tentativa de suicídio',
-              'Atividades esportivas profissionais',
-              'Uso de substâncias ilícitas',
-              'Guerra ou atos terroristas'
-            ],
-            rating: 4.8,
-            popular: true
-          }
-          // Add other products as needed
-        };
+        if (!id) {
+          toast({
+            title: "ID do produto não fornecido",
+            description: "Não foi possível identificar o produto.",
+            variant: "destructive"
+          });
+          navigate('/products');
+          return;
+        }
 
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const productData = mockProducts[id || ''];
+        const productData = await ProductsService.getProductById(id);
         if (productData) {
           setProduct(productData);
           setDuration([productData.minDuration]);
@@ -89,15 +56,16 @@ const ProductDetail: React.FC = () => {
             description: "O produto solicitado não existe ou foi removido.",
             variant: "destructive"
           });
-          navigate('/');
+          navigate('/products');
         }
       } catch (error) {
+        console.error('Erro ao carregar produto:', error);
         toast({
           title: "Erro ao carregar produto",
           description: "Não foi possível carregar os detalhes do produto.",
           variant: "destructive"
         });
-        navigate('/');
+        navigate('/products');
       } finally {
         setLoading(false);
       }
@@ -108,7 +76,9 @@ const ProductDetail: React.FC = () => {
 
   const calculatePrice = () => {
     if (!product) return 0;
-    return product.basePrice + (duration[0] - product.minDuration) * product.pricePerHour;
+    // Para produtos reais, usar o preço base diretamente
+    // Se houver lógica de preço por hora, implementar aqui
+    return product.basePrice;
   };
 
   const handleActivate = async () => {
@@ -159,12 +129,37 @@ const ProductDetail: React.FC = () => {
     return (
       <Layout requireAuth>
         <div className="container mx-auto px-4 py-8">
+          {/* Loading Breadcrumbs */}
+          <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/')}
+              className="h-auto p-1 text-muted-foreground hover:text-foreground"
+            >
+              <Home className="w-4 h-4 mr-1" />
+              Dashboard
+            </Button>
+            <ChevronRight className="w-4 h-4" />
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/products')}
+              className="h-auto p-1 text-muted-foreground hover:text-foreground"
+            >
+              Produtos
+            </Button>
+            <ChevronRight className="w-4 h-4" />
+            <div className="h-4 w-32 bg-muted rounded animate-pulse"></div>
+          </nav>
+
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-muted rounded w-1/3"></div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                 <div className="h-64 bg-muted rounded"></div>
                 <div className="h-32 bg-muted rounded"></div>
+                <div className="h-40 bg-muted rounded"></div>
               </div>
               <div className="h-96 bg-muted rounded"></div>
             </div>
@@ -179,15 +174,65 @@ const ProductDetail: React.FC = () => {
   return (
     <Layout requireAuth>
       <div className="container mx-auto px-4 py-8">
-        {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar ao Dashboard
-        </Button>
+        {/* Breadcrumbs */}
+        <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/')}
+            className="h-auto p-1 text-muted-foreground hover:text-foreground"
+          >
+            <Home className="w-4 h-4 mr-1" />
+            Dashboard
+          </Button>
+          <ChevronRight className="w-4 h-4" />
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/products')}
+            className="h-auto p-1 text-muted-foreground hover:text-foreground"
+          >
+            Produtos
+          </Button>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-foreground font-medium">
+            {product?.name || 'Carregando...'}
+          </span>
+        </nav>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/products')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar aos Produtos
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: product.name,
+                  text: product.description,
+                  url: window.location.href
+                });
+              } else {
+                navigator.clipboard.writeText(window.location.href);
+                toast({
+                  title: "Link copiado!",
+                  description: "O link do produto foi copiado para a área de transferência.",
+                });
+              }
+            }}
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            Compartilhar
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Product Details */}
@@ -219,7 +264,7 @@ const ProductDetail: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-foreground leading-relaxed">
-                  {product.longDescription}
+                  {product.description}
                 </p>
               </CardContent>
             </Card>
@@ -234,29 +279,64 @@ const ProductDetail: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {product.benefits.map((benefit, index) => (
+                  {product.features.map((feature, index) => (
                     <div key={index} className="flex items-start gap-2">
                       <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{benefit}</span>
+                      <span className="text-sm">{feature}</span>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Exclusions */}
+            {/* Product Info */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className="text-muted-foreground">Exclusões</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Informações do Produto
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {product.exclusions.map((exclusion, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0"></div>
-                      <span className="text-sm text-muted-foreground">{exclusion}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Categoria</span>
+                      <span className="text-sm font-medium capitalize">{product.category}</span>
                     </div>
-                  ))}
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Duração</span>
+                      <span className="text-sm font-medium">{product.duration}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Avaliação</span>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium">{product.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Cobertura</span>
+                      <span className="text-sm font-medium text-success">{product.coverage}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Status</span>
+                      <div className="flex gap-2">
+                        {product.popular && (
+                          <Badge variant="secondary" className="bg-warning text-warning-foreground text-xs">
+                            Popular
+                          </Badge>
+                        )}
+                        {product.recommended && (
+                          <Badge variant="secondary" className="bg-success text-success-foreground text-xs">
+                            Recomendado
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -273,47 +353,29 @@ const ProductDetail: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Duration Slider */}
+                {/* Price Display */}
                 <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Duração</span>
-                    <span className="font-medium">{duration[0]} horas</span>
-                  </div>
-                  
-                  <Slider
-                    value={duration}
-                    onValueChange={setDuration}
-                    max={product.maxDuration}
-                    min={product.minDuration}
-                    step={1}
-                    className="w-full"
-                  />
-                  
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{product.minDuration}h</span>
-                    <span>{product.maxDuration}h</span>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      R$ {product.basePrice.toFixed(2)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Preço único</p>
                   </div>
                 </div>
 
                 {/* Price Breakdown */}
                 <div className="space-y-3 pt-4 border-t border-border/50">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Preço base</span>
+                    <span className="text-muted-foreground">Preço do produto</span>
                     <span>R$ {product.basePrice.toFixed(2)}</span>
                   </div>
-                  {duration[0] > product.minDuration && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        +{duration[0] - product.minDuration}h adicionais
-                      </span>
-                      <span>
-                        R$ {((duration[0] - product.minDuration) * product.pricePerHour).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Taxas incluídas</span>
+                    <span>R$ 0,00</span>
+                  </div>
                   <div className="flex justify-between text-lg font-bold border-t border-border/50 pt-3">
                     <span>Total</span>
-                    <span className="text-primary">R$ {calculatePrice().toFixed(2)}</span>
+                    <span className="text-primary">R$ {product.basePrice.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -324,7 +386,7 @@ const ProductDetail: React.FC = () => {
                     <span className="text-sm font-medium">Período de Cobertura</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Ativo por {duration[0]} horas após ativação
+                    {product.duration} após ativação
                   </p>
                 </div>
 
@@ -339,7 +401,7 @@ const ProductDetail: React.FC = () => {
                   ) : (
                     <>
                       <Zap className="w-4 h-4 mr-2" />
-                      Ativar Agora - R$ {calculatePrice().toFixed(2)}
+                      Ativar Agora - R$ {product.basePrice.toFixed(2)}
                     </>
                   )}
                 </Button>
