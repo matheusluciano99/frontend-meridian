@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallet } from '@/contexts/WalletContext';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ export const Header: React.FC = () => {
   const { user, logout, syncWalletBalance } = useAuth();
   const { wallet } = useWallet();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSyncBalance = async () => {
     try {
@@ -53,6 +54,18 @@ export const Header: React.FC = () => {
     }
   };
 
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  const getNavLinkClass = (path: string) => {
+    const baseClass = "transition-smooth";
+    const activeClass = "text-foreground font-medium";
+    const inactiveClass = "text-muted-foreground hover:text-foreground";
+    
+    return `${baseClass} ${isActiveRoute(path) ? activeClass : inactiveClass}`;
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -69,17 +82,20 @@ export const Header: React.FC = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/products" className="text-muted-foreground hover:text-foreground transition-smooth">
+            <Link to="/products" className={getNavLinkClass('/products')}>
               Produtos
             </Link>
-            <Link to="/coverage" className="text-muted-foreground hover:text-foreground transition-smooth">
+            <Link to="/coverage" className={getNavLinkClass('/coverage')}>
               Cobertura
             </Link>
-            <Link to="/history" className="text-muted-foreground hover:text-foreground transition-smooth">
+            <Link to="/history" className={getNavLinkClass('/history')}>
               Histórico
             </Link>
-            <Link to="/claims" className="text-muted-foreground hover:text-foreground transition-smooth">
+            <Link to="/claims" className={getNavLinkClass('/claims')}>
               Sinistros
+            </Link>
+            <Link to="/profile" className={getNavLinkClass('/profile')}>
+              Profile
             </Link>
           </nav>
 
