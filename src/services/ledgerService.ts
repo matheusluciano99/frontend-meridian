@@ -36,9 +36,29 @@ const TYPE_MAP: Record<string, { uiType: string; buildDescription: (e: RawLedger
     uiType: 'PolicyPaused',
     buildDescription: (e) => `Apólice cancelada`,
   },
+  policy_expired: {
+    uiType: 'PolicyExpired',
+    buildDescription: (e) => `Apólice expirada`,
+  },
   payment_received: {
     uiType: 'WEBHOOK_PAYMENT_CONFIRMED',
-    buildDescription: (e) => `Pagamento recebido${e.event_data?.transaction_hash ? ' ' + e.event_data.transaction_hash.slice(0, 6) : ''}`,
+    buildDescription: (e) => `Pagamento confirmado${e.event_data?.payment_method ? ' via ' + e.event_data.payment_method : ''}`,
+  },
+  charge_started: {
+    uiType: 'CHARGE_STARTED',
+    buildDescription: (e) => `Cobrança iniciada${e.event_data?.product_name ? ' - ' + e.event_data.product_name : ''}`,
+  },
+  user_login: {
+    uiType: 'UserLogin',
+    buildDescription: (e) => `Login realizado${e.event_data?.login_method ? ' via ' + e.event_data.login_method : ''}`,
+  },
+  profile_updated: {
+    uiType: 'ProfileUpdated',
+    buildDescription: (e) => `Perfil atualizado${e.event_data?.updated_fields ? ' - ' + e.event_data.updated_fields.join(', ') : ''}`,
+  },
+  kyc_document_uploaded: {
+    uiType: 'KycDocumentUploaded',
+    buildDescription: (e) => `Documento enviado${e.event_data?.document_type ? ' - ' + e.event_data.document_type : ''}`,
   },
 };
 

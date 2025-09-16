@@ -10,7 +10,7 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [balanceUpdateInterval, setBalanceUpdateInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Verificar se Freighter está disponível
+  // Check if Freighter is available
   const isFreighterAvailable = async () => {
     if (typeof window === 'undefined') return false;
     
@@ -22,12 +22,12 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Obter a API do Freighter (agora usamos a importação direta)
+  // Get Freighter API (now using direct import)
   const getFreighterApi = () => {
     return FreighterApi;
   };
 
-  // Atualizar saldo e iniciar atualizações automáticas
+  // Update balance and start automatic updates
   const updateBalance = async () => {
     if (!wallet) return;
     
@@ -39,18 +39,18 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Iniciar atualizações automáticas do saldo
+  // Start automatic balance updates
   const startBalanceUpdates = () => {
     if (balanceUpdateInterval) {
       clearInterval(balanceUpdateInterval);
     }
     
-    // Atualizar saldo a cada 30 segundos
+    // Update balance every 30 seconds
     const interval = setInterval(updateBalance, 30000);
     setBalanceUpdateInterval(interval);
   };
 
-  // Parar atualizações automáticas do saldo
+  // Stop automatic balance updates
   const stopBalanceUpdates = () => {
     if (balanceUpdateInterval) {
       clearInterval(balanceUpdateInterval);
@@ -62,47 +62,55 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
   const checkAccountActivation = async (publicKey: string, network: string) => {
     try {
       const baseUrl = network === 'testnet' 
-        ? '/horizon-testnet' 
-        : '/horizon';
+        ? 'https://horizon-testnet.stellar.org' 
+        : 'https://horizon.stellar.org';
       
       const accountUrl = `${baseUrl}/accounts/${publicKey}`;
+      console.log('🔍 Verificando conta:', accountUrl);
+      
       const response = await fetch(accountUrl);
+      console.log('📊 Status da resposta:', response.status);
       
       if (response.ok) {
+        console.log('✅ Conta ativada');
         return true;
       } else if (response.status === 404) {
+        console.log('❌ Conta não encontrada (não ativada)');
         return false;
       } else {
+        const errorText = await response.text();
+        console.error('🚨 Erro HTTP:', response.status, errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
+      console.error('🚨 Erro ao verificar conta:', error);
       throw error;
     }
   };
 
-  // Conectar carteira
+  // Connect wallet
   const connectWallet = async () => {
     if (!(await isFreighterAvailable())) {
-      throw new Error('Freighter não está instalado ou disponível. Verifique se a extensão está ativa.');
+      throw new Error('Freighter is not installed or available. Please check if the extension is active.');
     }
 
     setIsConnecting(true);
     try {
       const api = getFreighterApi();
       
-      // Verificar se já está conectado
+      // Check if already connected
       const isConnected = await api.isConnected();
       
       if (!isConnected) {
-        // Solicitar permissão para conectar
+        // Request permission to connect
         await api.setAllowed();
       }
       
-      // Obter chave pública
+      // Get public key
       const publicKey = await api.getPublicKey();
       
       if (!publicKey) {
-        throw new Error('Falha ao obter chave pública da carteira');
+        throw new Error('Failed to get wallet public key');
       }
 
       const walletInfo: WalletInfo = {
@@ -116,44 +124,44 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
       // Verificar se a conta precisa ser ativada
       await checkAccountActivation(publicKey, walletInfo.network);
       
-      // Tentar obter saldo e iniciar atualizações automáticas
+      // Try to get balance and start automatic updates
       try {
         const balance = await _getBalanceInternal();
         setWallet(prev => prev ? { ...prev, balance } : null);
         
-        // Iniciar atualizações automáticas do saldo
+        // Start automatic balance updates
         startBalanceUpdates();
       } catch (balanceError) {
-        // Continuar mesmo se não conseguir o saldo
+        // Continue even if balance cannot be obtained
       }
       
     } catch (error) {
-      // Tentar fornecer mensagens de erro mais específicas
+      // Try to provide more specific error messages
       if (error.message.includes('User rejected')) {
-        throw new Error('Conexão rejeitada pelo usuário. Tente novamente e aprove a conexão na extensão.');
+        throw new Error('Connection rejected by user. Try again and approve the connection in the extension.');
       } else if (error.message.includes('Not installed')) {
-        throw new Error('Freighter não está instalado. Instale a extensão e recarregue a página.');
+        throw new Error('Freighter is not installed. Install the extension and reload the page.');
       } else if (error.message.includes('Not connected')) {
-        throw new Error('Freighter não está conectado. Abra a extensão e faça login.');
+        throw new Error('Freighter is not connected. Open the extension and log in.');
       } else {
-        throw new Error(`Erro ao conectar: ${error.message}`);
+        throw new Error(`Connection error: ${error.message}`);
       }
     } finally {
       setIsConnecting(false);
     }
   };
 
-  // Desconectar carteira
+  // Disconnect wallet
   const disconnectWallet = async () => {
     try {
-      // Verificar se a API está disponível
+      // Check if API is available
       if (await isFreighterAvailable()) {
         const api = getFreighterApi();
         
-        // Verificar se está conectado antes de tentar desconectar
+        // Check if connected before trying to disconnect
         const isConnected = await api.isConnected();
         if (isConnected) {
-          // Revogar permissões para forçar novo login
+          // Revoke permissions to force new login
           try {
             await api.setAllowed();
           } catch (setAllowedError) {
@@ -194,28 +202,35 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
   // Função interna para obter saldo (sem atualizar estado)
   const _getBalanceInternal = async (): Promise<number> => {
     if (!wallet || !(await isFreighterAvailable())) {
+      console.log('❌ Wallet não disponível para obter saldo');
       return 0;
     }
 
     try {
-      // Configurar URL baseada na rede (usando proxy local)
+      // Configurar URL baseada na rede (usando endpoints públicos)
       const baseUrl = wallet.network === 'testnet' 
-        ? '/horizon-testnet' 
-        : '/horizon';
+        ? 'https://horizon-testnet.stellar.org' 
+        : 'https://horizon.stellar.org';
       
       const accountUrl = `${baseUrl}/accounts/${wallet.publicKey}`;
+      console.log('💰 Buscando saldo:', accountUrl);
       
       // Obter dados da conta
       const response = await fetch(accountUrl);
+      console.log('📊 Status da resposta para saldo:', response.status);
       
       if (!response.ok) {
         if (response.status === 404) {
+          console.log('❌ Conta não encontrada para obter saldo');
           return 0;
         }
+        const errorText = await response.text();
+        console.error('🚨 Erro HTTP ao obter saldo:', response.status, errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const accountData = await response.json();
+      console.log('📄 Dados da conta recebidos:', accountData);
       
       // Procurar por XLM (nativo) nos balances
       const xlmBalance = accountData.balances?.find((balance: any) => 
@@ -224,12 +239,15 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
       
       if (xlmBalance) {
         const balance = parseFloat(xlmBalance.balance);
+        console.log('✅ Saldo XLM encontrado:', balance);
         return balance;
       } else {
+        console.log('⚠️ Nenhum saldo XLM encontrado');
         return 0;
       }
       
     } catch (error) {
+      console.error('🚨 Erro ao obter saldo:', error);
       return 0;
     }
   };
@@ -270,7 +288,7 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
                 const balance = await _getBalanceInternal();
                 setWallet(prev => prev ? { ...prev, balance } : null);
                 
-                // Iniciar atualizações automáticas do saldo
+                // Start automatic balance updates
                 startBalanceUpdates();
               } catch (balanceError) {
                 // Erro silencioso
@@ -291,6 +309,48 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Verificar ativação da conta (função pública)
+  const checkAccountActivationPublic = async (): Promise<boolean> => {
+    if (!wallet) {
+      throw new Error('Carteira não conectada');
+    }
+    
+    return await checkAccountActivation(wallet.publicKey, wallet.network);
+  };
+
+  // Solicitar fundos de teste
+  const requestTestnetFunds = async (): Promise<boolean> => {
+    if (!wallet || wallet.network !== 'testnet') {
+      throw new Error('Apenas disponível para testnet');
+    }
+
+    try {
+      console.log('🪙 Solicitando fundos de teste para:', wallet.publicKey);
+      
+      const response = await fetch('https://horizon-testnet.stellar.org/friendbot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          addr: wallet.publicKey
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Fundos de teste solicitados com sucesso');
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error('🚨 Erro ao solicitar fundos:', response.status, errorText);
+        return false;
+      }
+    } catch (error) {
+      console.error('🚨 Erro ao solicitar fundos de teste:', error);
+      return false;
+    }
+  };
+
   return (
     <WalletContext.Provider value={{
       wallet,
@@ -298,7 +358,9 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
       connectWallet,
       disconnectWallet,
       signTransaction,
-      getBalance
+      getBalance,
+      checkAccountActivation: checkAccountActivationPublic,
+      requestTestnetFunds
     }}>
       {children}
     </WalletContext.Provider>

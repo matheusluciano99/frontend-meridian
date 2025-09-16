@@ -42,8 +42,8 @@ const Products: React.FC = () => {
         setFilteredProducts(productsData);
       } catch (error) {
         toast({
-          title: "Erro ao carregar produtos",
-          description: "Não foi possível carregar os produtos disponíveis.",
+          title: "Error loading products",
+          description: "Could not load available products.",
           variant: "destructive"
         });
       } finally {
@@ -186,10 +186,10 @@ const Products: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Nossos Produtos</h1>
+          <h1 className="text-4xl font-bold mb-4">Our Products</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Proteção instantânea e acessível para todas as suas necessidades. 
-            Escolha a cobertura ideal e ative em segundos.
+            Instant and affordable protection for all your needs. 
+            Choose the ideal coverage and activate in seconds.
           </p>
         </div>
 
@@ -197,7 +197,7 @@ const Products: React.FC = () => {
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <Star className="w-6 h-6 text-yellow-500" />
-            <h2 className="text-2xl font-bold">Recomendados para Você</h2>
+            <h2 className="text-2xl font-bold">Recommended for You</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -259,7 +259,7 @@ const Products: React.FC = () => {
                     
                     <Button asChild className="group-hover:bg-primary group-hover:text-primary-foreground transition-smooth">
                       <Link to={`/product/${product.id}`}>
-                        Ver detalhes
+                        View details
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
                     </Button>
@@ -274,7 +274,7 @@ const Products: React.FC = () => {
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="w-6 h-6 text-green-500" />
-            <h2 className="text-2xl font-bold">Em Alta</h2>
+            <h2 className="text-2xl font-bold">Trending</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -297,12 +297,12 @@ const Products: React.FC = () => {
                 
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Cobertura</span>
+                    <span className="text-sm text-muted-foreground">Coverage</span>
                     <span className="font-medium text-sm">{product.coverage}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Preço</span>
+                    <span className="text-sm text-muted-foreground">Price</span>
                     <span className="font-bold text-primary">R$ {product.basePrice.toFixed(2)}</span>
                   </div>
 
@@ -322,7 +322,7 @@ const Products: React.FC = () => {
           <div className="mb-12">
             <div className="flex items-center gap-2 mb-6">
               <Zap className="w-6 h-6 text-blue-500" />
-              <h2 className="text-2xl font-bold">Novidades</h2>
+              <h2 className="text-2xl font-bold">New Products</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -331,7 +331,7 @@ const Products: React.FC = () => {
                   <div className="absolute top-4 right-4 z-10">
                     <Badge className="bg-blue-500 text-white">
                       <Zap className="w-3 h-3 mr-1" />
-                      Novo
+                      New
                     </Badge>
                   </div>
                   
@@ -349,18 +349,18 @@ const Products: React.FC = () => {
                   
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Cobertura</span>
+                      <span className="text-sm text-muted-foreground">Coverage</span>
                       <span className="font-medium">{product.coverage}</span>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Preço</span>
+                      <span className="text-sm text-muted-foreground">Price</span>
                       <span className="font-bold text-primary text-lg">R$ {product.basePrice.toFixed(2)}</span>
                     </div>
 
                     <Button asChild className="w-full">
                       <Link to={`/product/${product.id}`}>
-                        Conhecer produto
+                        Learn more
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
                     </Button>
@@ -374,9 +374,9 @@ const Products: React.FC = () => {
         {/* All Products Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Todos os Produtos</h2>
+            <h2 className="text-2xl font-bold">All Products</h2>
             <p className="text-sm text-muted-foreground">
-              {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
+              {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
             </p>
           </div>
 
@@ -388,7 +388,7 @@ const Products: React.FC = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Buscar produtos..."
+                    placeholder="Search products..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -400,18 +400,18 @@ const Products: React.FC = () => {
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-full md:w-48">
                   <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Categoria" />
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  <SelectItem value="acidentes">Acidentes</SelectItem>
-                  <SelectItem value="saude">Saúde</SelectItem>
-                  <SelectItem value="viagem">Viagem</SelectItem>
-                  <SelectItem value="trabalho">Trabalho</SelectItem>
-                  <SelectItem value="esporte">Esporte</SelectItem>
-                  <SelectItem value="residencial">Residencial</SelectItem>
-                  <SelectItem value="transporte">Transporte</SelectItem>
-                  <SelectItem value="corporativo">Corporativo</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="acidentes">Accidents</SelectItem>
+                  <SelectItem value="saude">Health</SelectItem>
+                  <SelectItem value="viagem">Travel</SelectItem>
+                  <SelectItem value="trabalho">Work</SelectItem>
+                  <SelectItem value="esporte">Sports</SelectItem>
+                  <SelectItem value="residencial">Residential</SelectItem>
+                  <SelectItem value="transporte">Transport</SelectItem>
+                  <SelectItem value="corporativo">Corporate</SelectItem>
                   <SelectItem value="pet">Pet</SelectItem>
                   <SelectItem value="digital">Digital</SelectItem>
                 </SelectContent>
@@ -421,13 +421,13 @@ const Products: React.FC = () => {
               <Select value={priceFilter} onValueChange={setPriceFilter}>
                 <SelectTrigger className="w-full md:w-48">
                   <DollarSign className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Preço" />
+                  <SelectValue placeholder="Price" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os preços</SelectItem>
-                  <SelectItem value="low">Até R$ 3,00</SelectItem>
-                  <SelectItem value="medium">R$ 3,00 - R$ 7,00</SelectItem>
-                  <SelectItem value="high">Acima de R$ 7,00</SelectItem>
+                  <SelectItem value="all">All prices</SelectItem>
+                  <SelectItem value="low">Up to $3.00</SelectItem>
+                  <SelectItem value="medium">$3.00 - $7.00</SelectItem>
+                  <SelectItem value="high">Above $7.00</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -435,14 +435,14 @@ const Products: React.FC = () => {
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-full md:w-48">
                   <Clock className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Ordenar" />
+                  <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recommended">Recomendados</SelectItem>
-                  <SelectItem value="price-low">Menor preço</SelectItem>
-                  <SelectItem value="price-high">Maior preço</SelectItem>
-                  <SelectItem value="rating">Melhor avaliação</SelectItem>
-                  <SelectItem value="coverage">Maior cobertura</SelectItem>
+                  <SelectItem value="recommended">Recommended</SelectItem>
+                  <SelectItem value="price-low">Lowest price</SelectItem>
+                  <SelectItem value="price-high">Highest price</SelectItem>
+                  <SelectItem value="rating">Best rating</SelectItem>
+                  <SelectItem value="coverage">Highest coverage</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -460,7 +460,7 @@ const Products: React.FC = () => {
                     setSortBy('recommended');
                   }}
                 >
-                  Limpar filtros
+                  Clear filters
                 </Button>
               </div>
             )}
@@ -494,7 +494,7 @@ const Products: React.FC = () => {
                 <CardContent className="flex-1 flex flex-col">
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Duração</span>
+                      <span className="text-muted-foreground">Duration</span>
                       <span className="font-medium">{product.duration}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -502,7 +502,7 @@ const Products: React.FC = () => {
                       <span className="font-medium text-success">{product.coverage}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Avaliação</span>
+                      <span className="text-muted-foreground">Rating</span>
                       <div className="flex items-center gap-1">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span className="font-medium">{product.rating}</span>
@@ -516,7 +516,7 @@ const Products: React.FC = () => {
                         <p className="text-xl font-bold text-primary">
                           R$ {product.basePrice.toFixed(2)}
                         </p>
-                        <p className="text-xs text-muted-foreground">a partir de</p>
+                        <p className="text-xs text-muted-foreground">starting from</p>
                       </div>
                     </div>
                     
@@ -526,7 +526,7 @@ const Products: React.FC = () => {
                       variant="outline"
                     >
                       <Link to={`/product/${product.id}`}>
-                        Ver detalhes
+                        View details
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
                     </Button>
@@ -540,9 +540,9 @@ const Products: React.FC = () => {
           {filteredProducts.length === 0 && (
             <div className="text-center py-12">
               <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>
+              <h3 className="text-xl font-semibold mb-2">No products found</h3>
               <p className="text-muted-foreground mb-6">
-                Tente ajustar os filtros ou termo de busca para encontrar o que procura.
+                Try adjusting the filters or search term to find what you're looking for.
               </p>
               <Button
                 variant="outline"

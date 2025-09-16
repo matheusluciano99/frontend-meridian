@@ -1,5 +1,4 @@
 import React from 'react';
-import { Shield } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -8,9 +7,11 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo e marca */}
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 gradient-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
+            <img 
+              src="/insurance_logo.png" 
+              alt="Insurance Logo" 
+              className="w-6 h-6 object-contain"
+            />
             <span className="text-lg font-semibold text-gradient-primary">
               Stellar Insurance
             </span>

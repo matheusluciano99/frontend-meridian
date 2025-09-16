@@ -29,10 +29,21 @@ import {
   Settings,
   Copy,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  Briefcase,
+  DollarSign,
+  MapPin,
+  Heart,
+  Car,
+  Home,
+  GraduationCap,
+  Users,
+  FileSearch
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { LedgerService, LedgerEventUI } from '@/services/ledgerService';
 import { useWallet } from '@/contexts/WalletContext';
 
 interface UserProfile {
@@ -43,42 +54,120 @@ interface UserProfile {
   document?: string;
   kycStatus: 'pending' | 'verified' | 'rejected';
   kycDocumentUrl?: string;
+  // Informações extras para avaliação de risco
+  birthDate?: string;
+  age?: number;
+  occupation?: string;
+  monthlyIncome?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+  dependents?: number;
+  education?: 'elementary' | 'high_school' | 'college' | 'graduate' | 'postgraduate';
+  hasHealthInsurance?: boolean;
+  hasLifeInsurance?: boolean;
+  hasAutoInsurance?: boolean;
+  hasHomeInsurance?: boolean;
+  smoker?: boolean;
+  preExistingConditions?: string[];
+  hobbies?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface ActivityLog {
-  id: string;
-  action: string;
-  description: string;
-  timestamp: Date;
-  type: 'login' | 'policy' | 'payment' | 'kyc' | 'profile';
-}
+// Usar LedgerEventUI em vez de ActivityLog
+type ActivityLog = LedgerEventUI;
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
   const { wallet, isConnecting, connectWallet, disconnectWallet, getBalance } = useWallet();
   const { toast } = useToast();
   
+  // Estado para controlar qual aba está ativa
+  const [activeTab, setActiveTab] = useState('personal');
+  
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingExtra, setEditingExtra] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [refreshingWallet, setRefreshingWallet] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    document: ''
+    document: '',
+    // Informações extras
+    birthDate: '',
+    occupation: '',
+    monthlyIncome: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widowed',
+    dependents: 0,
+    education: 'high_school' as 'elementary' | 'high_school' | 'college' | 'graduate' | 'postgraduate',
+    hasHealthInsurance: false,
+    hasLifeInsurance: false,
+    hasAutoInsurance: false,
+    hasHomeInsurance: false,
+    smoker: false,
+    preExistingConditions: [] as string[],
+    hobbies: [] as string[]
   });
 
   useEffect(() => {
     fetchProfile();
     fetchActivities();
   }, []);
+
+  // Effect to update wallet data when "wallet" tab is opened
+  useEffect(() => {
+    if (activeTab === 'wallet') {
+      console.log('💳 Wallet tab opened - updating data...');
+      refreshWalletData();
+    }
+  }, [activeTab]);
+
+  // Function to update all wallet data
+  const refreshWalletData = async () => {
+    if (wallet) {
+      setRefreshingWallet(true);
+      try {
+        console.log('🔄 Updating wallet data...');
+        
+        // Update balance
+        await getBalance();
+        
+        // Check account status
+        // Note: The checkAccountActivation and requestTestnetFunds functions 
+        // will be called by specific buttons when needed
+        
+        console.log('✅ Wallet data updated');
+        
+        toast({
+          title: "Data updated",
+          description: "Wallet information has been updated successfully.",
+        });
+      } catch (error) {
+        console.error('❌ Error updating wallet data:', error);
+        toast({
+          title: "Error updating",
+          description: "Could not update wallet data.",
+          variant: "destructive"
+        });
+      } finally {
+        setRefreshingWallet(false);
+      }
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -93,6 +182,25 @@ const Profile: React.FC = () => {
         document: '123.456.789-00',
         kycStatus: 'pending',
         kycDocumentUrl: undefined,
+        // Mocked extra information
+        birthDate: '1990-05-15',
+        age: 34,
+        occupation: 'Engenheiro de Software',
+        monthlyIncome: 15000,
+        address: 'Rua das Flores, 123',
+        city: 'São Paulo',
+        state: 'SP',
+        zipCode: '01234-567',
+        maritalStatus: 'married',
+        dependents: 2,
+        education: 'college',
+        hasHealthInsurance: true,
+        hasLifeInsurance: false,
+        hasAutoInsurance: true,
+        hasHomeInsurance: false,
+        smoker: false,
+        preExistingConditions: ['Hipertensão leve'],
+        hobbies: ['Futebol', 'Leitura', 'Viagem'],
         createdAt: new Date('2024-01-15'),
         updatedAt: new Date()
       };
@@ -103,11 +211,29 @@ const Profile: React.FC = () => {
         email: mockProfile.email,
         phone: mockProfile.phone || '',
         document: mockProfile.document || '',
+        // Extra information
+        birthDate: mockProfile.birthDate || '',
+        occupation: mockProfile.occupation || '',
+        monthlyIncome: mockProfile.monthlyIncome?.toString() || '',
+        address: mockProfile.address || '',
+        city: mockProfile.city || '',
+        state: mockProfile.state || '',
+        zipCode: mockProfile.zipCode || '',
+        maritalStatus: mockProfile.maritalStatus || 'single',
+        dependents: mockProfile.dependents || 0,
+        education: mockProfile.education || 'high_school',
+        hasHealthInsurance: mockProfile.hasHealthInsurance || false,
+        hasLifeInsurance: mockProfile.hasLifeInsurance || false,
+        hasAutoInsurance: mockProfile.hasAutoInsurance || false,
+        hasHomeInsurance: mockProfile.hasHomeInsurance || false,
+        smoker: mockProfile.smoker || false,
+        preExistingConditions: mockProfile.preExistingConditions || [],
+        hobbies: mockProfile.hobbies || []
       });
     } catch (error) {
       toast({
-        title: "Erro ao carregar perfil",
-        description: "Não foi possível carregar os dados do perfil.",
+        title: "Error loading profile",
+        description: "Could not load profile data.",
         variant: "destructive"
       });
     } finally {
@@ -117,48 +243,14 @@ const Profile: React.FC = () => {
 
   const fetchActivities = async () => {
     try {
-      // Mock activities data
-      const mockActivities: ActivityLog[] = [
-        {
-          id: '1',
-          action: 'Login realizado',
-          description: 'Acesso ao sistema via email',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          type: 'login'
-        },
-        {
-          id: '2',
-          action: 'Apólice ativada',
-          description: 'Acidentes 48h - R$ 3,00',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          type: 'policy'
-        },
-        {
-          id: '3',
-          action: 'Pagamento confirmado',
-          description: 'PIX - R$ 3,00',
-          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-          type: 'payment'
-        },
-        {
-          id: '4',
-          action: 'Documento enviado',
-          description: 'RG para verificação KYC',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          type: 'kyc'
-        },
-        {
-          id: '5',
-          action: 'Perfil atualizado',
-          description: 'Telefone alterado',
-          timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-          type: 'profile'
-        }
-      ];
+      if (!user?.id) return;
       
-      setActivities(mockActivities);
+      const ledgerEvents = await LedgerService.getUserEvents(user.id);
+      setActivities(ledgerEvents);
     } catch (error) {
-      console.error('Erro ao carregar atividades:', error);
+      console.error('Error loading activities:', error);
+      // Em caso de erro, manter array vazio
+      setActivities([]);
     }
   };
 
@@ -171,18 +263,20 @@ const Profile: React.FC = () => {
       setProfile(prev => prev ? {
         ...prev,
         ...formData,
+        monthlyIncome: formData.monthlyIncome ? parseFloat(formData.monthlyIncome) : undefined,
         updatedAt: new Date()
       } : null);
       
       setEditing(false);
+      setEditingExtra(false);
       toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
+        title: "Profile updated",
+        description: "Your information has been saved successfully.",
       });
     } catch (error) {
       toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível atualizar o perfil.",
+        title: "Error saving",
+        description: "Could not update the profile.",
         variant: "destructive"
       });
     } finally {
@@ -197,9 +291,57 @@ const Profile: React.FC = () => {
         email: profile.email,
         phone: profile.phone || '',
         document: profile.document || '',
+        // Extra information
+        birthDate: profile.birthDate || '',
+        occupation: profile.occupation || '',
+        monthlyIncome: profile.monthlyIncome?.toString() || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zipCode: profile.zipCode || '',
+        maritalStatus: profile.maritalStatus || 'single',
+        dependents: profile.dependents || 0,
+        education: profile.education || 'high_school',
+        hasHealthInsurance: profile.hasHealthInsurance || false,
+        hasLifeInsurance: profile.hasLifeInsurance || false,
+        hasAutoInsurance: profile.hasAutoInsurance || false,
+        hasHomeInsurance: profile.hasHomeInsurance || false,
+        smoker: profile.smoker || false,
+        preExistingConditions: profile.preExistingConditions || [],
+        hobbies: profile.hobbies || []
       });
     }
     setEditing(false);
+  };
+
+  const handleCancelExtra = () => {
+    if (profile) {
+      setFormData({
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone || '',
+        document: profile.document || '',
+        // Extra information
+        birthDate: profile.birthDate || '',
+        occupation: profile.occupation || '',
+        monthlyIncome: profile.monthlyIncome?.toString() || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zipCode: profile.zipCode || '',
+        maritalStatus: profile.maritalStatus || 'single',
+        dependents: profile.dependents || 0,
+        education: profile.education || 'high_school',
+        hasHealthInsurance: profile.hasHealthInsurance || false,
+        hasLifeInsurance: profile.hasLifeInsurance || false,
+        hasAutoInsurance: profile.hasAutoInsurance || false,
+        hasHomeInsurance: profile.hasHomeInsurance || false,
+        smoker: profile.smoker || false,
+        preExistingConditions: profile.preExistingConditions || [],
+        hobbies: profile.hobbies || []
+      });
+    }
+    setEditingExtra(false);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,13 +360,13 @@ const Profile: React.FC = () => {
       } : null);
       
       toast({
-        title: "Documento enviado",
-        description: "Seu documento foi enviado para verificação.",
+        title: "Document sent",
+        description: "Your document has been sent for verification.",
       });
     } catch (error) {
       toast({
-        title: "Erro no upload",
-        description: "Não foi possível enviar o documento.",
+        title: "Upload error",
+        description: "Could not send the document.",
         variant: "destructive"
       });
     } finally {
@@ -236,14 +378,14 @@ const Profile: React.FC = () => {
     try {
       await connectWallet();
       toast({
-        title: "Carteira conectada",
-        description: "Sua carteira Freighter foi conectada com sucesso!",
+        title: "Wallet connected",
+        description: "Your Freighter wallet has been connected successfully!",
       });
     } catch (error) {
-      console.error('Erro ao conectar carteira:', error);
+      console.error('Error connecting wallet:', error);
       toast({
-        title: "Erro ao conectar carteira",
-        description: "Não foi possível conectar à carteira Freighter. Verifique se a extensão está instalada.",
+        title: "Error connecting wallet",
+        description: "Could not connect to Freighter wallet. Please check if the extension is installed.",
         variant: "destructive"
       });
     }
@@ -252,8 +394,8 @@ const Profile: React.FC = () => {
   const handleDisconnectWallet = () => {
     disconnectWallet();
     toast({
-      title: "Carteira desconectada",
-      description: "Sua carteira foi desconectada com sucesso.",
+      title: "Wallet disconnected",
+      description: "Your wallet has been disconnected successfully.",
     });
   };
 
@@ -262,13 +404,13 @@ const Profile: React.FC = () => {
       try {
         const balance = await getBalance();
         toast({
-          title: "Saldo atualizado",
-          description: `Saldo atual: ${balance.toFixed(2)} XLM`,
+          title: "Balance updated",
+          description: `Current balance: ${balance.toFixed(2)} XLM`,
         });
       } catch (error) {
         toast({
-          title: "Erro ao atualizar saldo",
-          description: "Não foi possível atualizar o saldo da carteira.",
+          title: "Error updating balance",
+          description: "Could not update wallet balance.",
           variant: "destructive"
         });
       }
@@ -281,21 +423,21 @@ const Profile: React.FC = () => {
         return (
           <Badge variant="secondary" className="bg-success text-success-foreground">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Verificado
+            Verified
           </Badge>
         );
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-warning text-warning-foreground">
             <Clock className="w-3 h-3 mr-1" />
-            Pendente
+            Pending
           </Badge>
         );
       case 'rejected':
         return (
           <Badge variant="secondary" className="bg-destructive text-destructive-foreground">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Rejeitado
+            Rejected
           </Badge>
         );
       default:
@@ -305,16 +447,22 @@ const Profile: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'login':
-        return <User className="w-4 h-4 text-primary" />;
-      case 'policy':
+      case 'PolicyActivated':
         return <Shield className="w-4 h-4 text-success" />;
-      case 'payment':
+      case 'PolicyPaused':
+        return <Shield className="w-4 h-4 text-warning" />;
+      case 'PolicyExpired':
+        return <Shield className="w-4 h-4 text-destructive" />;
+      case 'WEBHOOK_PAYMENT_CONFIRMED':
         return <Wallet className="w-4 h-4 text-secondary" />;
-      case 'kyc':
-        return <FileText className="w-4 h-4 text-warning" />;
-      case 'profile':
+      case 'CHARGE_STARTED':
+        return <Wallet className="w-4 h-4 text-primary" />;
+      case 'UserLogin':
+        return <User className="w-4 h-4 text-primary" />;
+      case 'ProfileUpdated':
         return <Settings className="w-4 h-4 text-muted-foreground" />;
+      case 'KycDocumentUploaded':
+        return <FileText className="w-4 h-4 text-warning" />;
       default:
         return <Activity className="w-4 h-4 text-muted-foreground" />;
     }
@@ -346,23 +494,31 @@ const Profile: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Meu Perfil</h1>
+          <h1 className="text-3xl font-bold mb-2">My Profile</h1>
           <p className="text-muted-foreground">
-            Gerencie suas informações pessoais e configurações
+            Manage your personal information and settings
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Overview */}
           <div className="lg:col-span-2">
-            <Tabs defaultValue="personal" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="personal">Pessoal</TabsTrigger>
-                <TabsTrigger value="kyc">Verificação</TabsTrigger>
-                <TabsTrigger value="wallet">Carteira</TabsTrigger>
+            <Tabs 
+              defaultValue="personal" 
+              className="w-full"
+              onValueChange={(value) => {
+                console.log('🔄 Mudança de aba:', value);
+                setActiveTab(value);
+              }}
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="personal">Basic Information</TabsTrigger>
+                <TabsTrigger value="extra">Personal Information</TabsTrigger>
+                <TabsTrigger value="kyc">Verification</TabsTrigger>
+                <TabsTrigger value="wallet">Wallet</TabsTrigger>
               </TabsList>
 
-              {/* Personal Information */}
+              {/* Basic Information */}
               <TabsContent value="personal" className="space-y-6">
                 <Card className="glass-card border-border/50">
                   <CardHeader>
@@ -370,10 +526,10 @@ const Profile: React.FC = () => {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <User className="w-5 h-5" />
-                          Informações Pessoais
+                          Basic Information
                         </CardTitle>
                         <CardDescription>
-                          Gerencie seus dados pessoais e de contato
+                          Basic identification and contact data
                         </CardDescription>
                       </div>
                       {!editing ? (
@@ -383,7 +539,7 @@ const Profile: React.FC = () => {
                           onClick={() => setEditing(true)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Editar
+                          Edit
                         </Button>
                       ) : (
                         <div className="flex gap-2">
@@ -393,7 +549,7 @@ const Profile: React.FC = () => {
                             onClick={handleCancel}
                           >
                             <X className="w-4 h-4 mr-2" />
-                            Cancelar
+                            Cancel
                           </Button>
                           <Button
                             size="sm"
@@ -401,7 +557,7 @@ const Profile: React.FC = () => {
                             disabled={saving}
                           >
                             <Save className="w-4 h-4 mr-2" />
-                            {saving ? 'Salvando...' : 'Salvar'}
+                            {saving ? 'Saving...' : 'Save'}
                           </Button>
                         </div>
                       )}
@@ -410,12 +566,12 @@ const Profile: React.FC = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
+                        <Label htmlFor="name">Full Name</Label>
                         <Input
                           id="name"
                           value={formData.name}
                           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                         />
                       </div>
                       <div className="space-y-2">
@@ -425,17 +581,17 @@ const Profile: React.FC = () => {
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Telefone</Label>
+                        <Label htmlFor="phone">Phone</Label>
                         <Input
                           id="phone"
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                           placeholder="(11) 99999-9999"
                         />
                       </div>
@@ -445,8 +601,309 @@ const Profile: React.FC = () => {
                           id="document"
                           value={formData.document}
                           onChange={(e) => setFormData(prev => ({ ...prev, document: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                           placeholder="000.000.000-00"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Personal Information */}
+              <TabsContent value="extra" className="space-y-6">
+                <Card className="glass-card border-border/50">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileSearch className="w-5 h-5" />
+                          Personal Information
+                        </CardTitle>
+                        <CardDescription>
+                          Detailed personal data for insurance risk assessment
+                        </CardDescription>
+                      </div>
+                      {!editingExtra ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingExtra(true)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCancelExtra}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleSave}
+                            disabled={saving}
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            {saving ? 'Saving...' : 'Save'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Demographic Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        Demographic Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="birthDate">Birth Date</Label>
+                          <Input
+                            id="birthDate"
+                            type="date"
+                            value={formData.birthDate}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
+                            disabled={!editingExtra}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maritalStatus">Marital Status</Label>
+                          <select
+                            id="maritalStatus"
+                            value={formData.maritalStatus}
+                            onChange={(e) => setFormData(prev => ({ ...prev, maritalStatus: e.target.value as any }))}
+                            disabled={!editingExtra}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="divorced">Divorced</option>
+                            <option value="widowed">Widowed</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="dependents">Number of Dependents</Label>
+                          <Input
+                            id="dependents"
+                            type="number"
+                            min="0"
+                            value={formData.dependents}
+                            onChange={(e) => setFormData(prev => ({ ...prev, dependents: parseInt(e.target.value) || 0 }))}
+                            disabled={!editingExtra}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="education">Education</Label>
+                          <select
+                            id="education"
+                            value={formData.education}
+                            onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value as any }))}
+                            disabled={!editingExtra}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="elementary">Elementary School</option>
+                            <option value="high_school">High School</option>
+                            <option value="college">College</option>
+                            <option value="graduate">Graduate</option>
+                            <option value="postgraduate">Master's/PhD</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Professional and Financial Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-primary" />
+                        Professional and Financial Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="occupation">Profession/Occupation</Label>
+                          <Input
+                            id="occupation"
+                            value={formData.occupation}
+                            onChange={(e) => setFormData(prev => ({ ...prev, occupation: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="Ex: Engineer, Doctor, Salesperson..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="monthlyIncome">Monthly Income (R$)</Label>
+                          <Input
+                            id="monthlyIncome"
+                            type="number"
+                            value={formData.monthlyIncome}
+                            onChange={(e) => setFormData(prev => ({ ...prev, monthlyIncome: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-primary" />
+                        Address
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2 space-y-2">
+                          <Label htmlFor="address">Full Address</Label>
+                          <Input
+                            id="address"
+                            value={formData.address}
+                            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="Street, number, complement..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="city">City</Label>
+                          <Input
+                            id="city"
+                            value={formData.city}
+                            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                            disabled={!editingExtra}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="state">State</Label>
+                          <Input
+                            id="state"
+                            value={formData.state}
+                            onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+                            disabled={!editingExtra}
+                            maxLength={2}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="zipCode">ZIP Code</Label>
+                          <Input
+                            id="zipCode"
+                            value={formData.zipCode}
+                            onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="00000-000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Health Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Heart className="w-5 h-5 text-primary" />
+                        Health Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.smoker}
+                              onChange={(e) => setFormData(prev => ({ ...prev, smoker: e.target.checked }))}
+                              disabled={!editingExtra}
+                              className="rounded border-input"
+                            />
+                            Smoker
+                          </Label>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="preExistingConditions">Pre-existing Conditions</Label>
+                          <Input
+                            id="preExistingConditions"
+                            value={formData.preExistingConditions.join(', ')}
+                            onChange={(e) => setFormData(prev => ({ 
+                              ...prev, 
+                              preExistingConditions: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                            }))}
+                            disabled={!editingExtra}
+                            placeholder="Ex: Diabetes, Hypertension..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Current Insurance */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-primary" />
+                        Current Insurance
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasHealthInsurance"
+                            checked={formData.hasHealthInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasHealthInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasHealthInsurance" className="text-sm">Health</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasLifeInsurance"
+                            checked={formData.hasLifeInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasLifeInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasLifeInsurance" className="text-sm">Life</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasAutoInsurance"
+                            checked={formData.hasAutoInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasAutoInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasAutoInsurance" className="text-sm">Auto</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasHomeInsurance"
+                            checked={formData.hasHomeInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasHomeInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasHomeInsurance" className="text-sm">Home</Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hobbies and Activities */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Hobbies and Activities
+                      </h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="hobbies">Hobbies/Activities (separated by comma)</Label>
+                        <Input
+                          id="hobbies"
+                          value={formData.hobbies.join(', ')}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            hobbies: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                          }))}
+                           disabled={!editingExtra}
+                          placeholder="Ex: Football, Reading, Travel, Extreme sports..."
                         />
                       </div>
                     </div>
@@ -460,10 +917,10 @@ const Profile: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="w-5 h-5" />
-                      Verificação de Identidade (KYC)
+                      Identity Verification (KYC)
                     </CardTitle>
                     <CardDescription>
-                      Envie seus documentos para verificação de identidade
+                      Submit your documents for identity verification
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -472,11 +929,11 @@ const Profile: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <Shield className="w-6 h-6 text-primary" />
                         <div>
-                          <p className="font-medium">Status da Verificação</p>
+                          <p className="font-medium">Verification Status</p>
                           <p className="text-sm text-muted-foreground">
-                            {profile.kycStatus === 'verified' && 'Sua identidade foi verificada com sucesso'}
-                            {profile.kycStatus === 'pending' && 'Aguardando análise dos documentos'}
-                            {profile.kycStatus === 'rejected' && 'Documentos rejeitados - envie novamente'}
+                            {profile.kycStatus === 'verified' && 'Your identity has been successfully verified'}
+                            {profile.kycStatus === 'pending' && 'Waiting for document analysis'}
+                            {profile.kycStatus === 'rejected' && 'Documents rejected - please resubmit'}
                           </p>
                         </div>
                       </div>
@@ -485,11 +942,11 @@ const Profile: React.FC = () => {
 
                     {/* Document Upload */}
                     <div className="space-y-4">
-                      <Label>Documento de Identidade</Label>
+                      <Label>Identity Document</Label>
                       <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                         <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                         <p className="text-sm text-muted-foreground mb-2">
-                          Envie uma foto do seu RG, CNH ou Passaporte
+                          Upload a photo of your ID, Driver's License or Passport
                         </p>
                         <input
                           type="file"
@@ -505,7 +962,7 @@ const Profile: React.FC = () => {
                           disabled={uploading}
                         >
                           <label htmlFor="kyc-upload" className="cursor-pointer">
-                            {uploading ? 'Enviando...' : 'Selecionar Arquivo'}
+                            {uploading ? 'Uploading...' : 'Select File'}
                           </label>
                         </Button>
                       </div>
@@ -514,10 +971,10 @@ const Profile: React.FC = () => {
                     {/* Document Preview */}
                     {profile.kycDocumentUrl && (
                       <div className="space-y-2">
-                        <Label>Documento Enviado</Label>
+                        <Label>Submitted Document</Label>
                         <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
                           <FileText className="w-5 h-5 text-muted-foreground" />
-                          <span className="flex-1 text-sm">documento_identidade.pdf</span>
+                          <span className="flex-1 text-sm">identity_document.pdf</span>
                           <Button variant="ghost" size="sm">
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -536,21 +993,36 @@ const Profile: React.FC = () => {
                 {/* Freighter Wallet Connection */}
                 <Card className="glass-card border-border/50">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Wallet className="w-5 h-5" />
-                      Carteira Freighter
-                    </CardTitle>
-                    <CardDescription>
-                      Conecte sua carteira Freighter para pagamentos e recebimentos
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Wallet className="w-5 h-5" />
+                          Freighter Wallet
+                        </CardTitle>
+                        <CardDescription>
+                          Connect your Freighter wallet for payments and receipts
+                        </CardDescription>
+                      </div>
+                      {wallet && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={refreshWalletData}
+                          disabled={refreshingWallet}
+                        >
+                          <RefreshCw className={`w-4 h-4 mr-2 ${refreshingWallet ? 'animate-spin' : ''}`} />
+                          {refreshingWallet ? 'Updating...' : 'Update'}
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {!wallet ? (
                       <div className="text-center py-8">
                         <Wallet className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Conectar Carteira Freighter</h3>
+                        <h3 className="text-lg font-semibold mb-2">Connect Freighter Wallet</h3>
                         <p className="text-muted-foreground mb-6">
-                          Conecte sua carteira Freighter para fazer pagamentos e receber sinistros
+                          Connect your Freighter wallet to make payments and receive claims
                         </p>
                         <Button 
                           onClick={handleConnectWallet}
@@ -559,16 +1031,16 @@ const Profile: React.FC = () => {
                           className="gradient-primary"
                         >
                           <Wallet className="w-5 h-5 mr-2" />
-                          {isConnecting ? 'Conectando...' : 'Conectar Carteira'}
+                          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                         </Button>
                         
                         <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                          <h4 className="font-medium mb-2">Como conectar:</h4>
+                          <h4 className="font-medium mb-2">How to connect:</h4>
                           <ol className="text-sm text-muted-foreground space-y-1 text-left">
-                            <li>1. Instale a extensão Freighter no seu navegador</li>
-                            <li>2. Crie ou importe sua carteira Stellar</li>
-                            <li>3. Clique em "Conectar Carteira" acima</li>
-                            <li>4. Aprove a conexão na extensão</li>
+                            <li>1. Install the Freighter extension in your browser</li>
+                            <li>2. Create or import your Stellar wallet</li>
+                            <li>3. Click "Connect Wallet" above</li>
+                            <li>4. Approve the connection in the extension</li>
                           </ol>
                         </div>
                       </div>
@@ -580,7 +1052,7 @@ const Profile: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <Wallet className="w-5 h-5 text-green-600" />
                               <span className="font-medium text-green-700 dark:text-green-300">
-                                Carteira Conectada
+                                Wallet Connected
                               </span>
                             </div>
                             <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300">
@@ -590,7 +1062,7 @@ const Profile: React.FC = () => {
                           
                           <div className="space-y-3">
                             <div>
-                              <Label className="text-sm text-muted-foreground">Endereço da Carteira</Label>
+                              <Label className="text-sm text-muted-foreground">Wallet Address</Label>
                               <div className="flex items-center gap-2 mt-1">
                                 <code className="flex-1 bg-background px-3 py-2 rounded border text-sm font-mono">
                                   {wallet.publicKey}
@@ -623,7 +1095,7 @@ const Profile: React.FC = () => {
                             className="flex-1"
                           >
                             <RefreshCw className="w-4 h-4 mr-2" />
-                            Atualizar Saldo
+                            Update Balance
                           </Button>
                           <Button 
                             variant="destructive" 
@@ -631,7 +1103,7 @@ const Profile: React.FC = () => {
                             className="flex-1"
                           >
                             <LogOut className="w-4 h-4 mr-2" />
-                            Desconectar
+                            Disconnect
                           </Button>
                         </div>
                       </div>
@@ -642,10 +1114,10 @@ const Profile: React.FC = () => {
                       <div className="flex items-start gap-3">
                         <Wallet className="w-5 h-5 text-primary mt-1" />
                         <div>
-                          <h3 className="font-medium text-primary mb-1">Sobre a Carteira Freighter</h3>
+                          <h3 className="font-medium text-primary mb-1">About Freighter Wallet</h3>
                           <p className="text-sm text-muted-foreground">
-                            A Freighter é uma carteira segura para a rede Stellar. Use-a para fazer pagamentos 
-                            de apólices e receber pagamentos de sinistros diretamente na blockchain.
+                            Freighter is a secure wallet for the Stellar network. Use it to make policy 
+                            payments and receive claim payments directly on the blockchain.
                           </p>
                         </div>
                       </div>
@@ -663,7 +1135,7 @@ const Profile: React.FC = () => {
             {/* Profile Summary */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle>Resumo do Perfil</CardTitle>
+                <CardTitle>Profile Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -681,11 +1153,11 @@ const Profile: React.FC = () => {
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Membro desde</span>
+                    <span className="text-muted-foreground">Member since</span>
                     <span>{profile.createdAt.toLocaleDateString('pt-BR')}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Status KYC</span>
+                    <span className="text-muted-foreground">KYC Status</span>
                     {getKycStatusBadge(profile.kycStatus)}
                   </div>
                 </div>
@@ -695,10 +1167,10 @@ const Profile: React.FC = () => {
             {/* Recent Activities */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  Atividades Recentes
-                </CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Recent Activities
+                  </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {activities.slice(0, 5).map((activity) => (
@@ -707,8 +1179,13 @@ const Profile: React.FC = () => {
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{activity.action}</p>
+                      <p className="text-sm font-medium">{activity.type}</p>
                       <p className="text-xs text-muted-foreground">{activity.description}</p>
+                      {activity.amount > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          R$ {activity.amount.toFixed(2)}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {activity.timestamp.toLocaleString('pt-BR')}
                       </p>

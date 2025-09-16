@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Plus, Eye, MessageCircle, Calendar, DollarSign, CheckCircle, Clock, X, Send, Search } from 'lucide-react';
+import { FileText, Plus, Eye, MessageCircle, Calendar, DollarSign, CheckCircle, Clock, X, Send, Search, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimsService, ClaimUI } from '@/services/claimsService';
@@ -27,6 +27,7 @@ const Claims: React.FC = () => {
   const [messages, setMessages] = useState<ClaimMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [newClaim, setNewClaim] = useState({ claimType: '', description: '', incidentDate: '', claimAmount: '', policyId: '' });
+  const [claimDocuments, setClaimDocuments] = useState<File[]>([]);
 
   useEffect(() => { if (user?.id) fetchClaims(); }, [user?.id]);
 
@@ -59,6 +60,7 @@ const Claims: React.FC = () => {
       const created = await ClaimsService.create(user.id, { policyId: newClaim.policyId || '', claimType: newClaim.claimType, description: newClaim.description, incidentDate: newClaim.incidentDate, claimAmount: parseFloat(newClaim.claimAmount) });
       setClaims(prev => [created, ...prev]);
       setNewClaim({ claimType: '', description: '', incidentDate: '', claimAmount: '', policyId: '' });
+      setClaimDocuments([]);
       toast({ title: 'Sinistro criado', description: `Sinistro ${created.claimNumber} enviado.` });
     } catch (e: any) { toast({ title: 'Erro ao criar', description: e.message || 'Falha na criação', variant: 'destructive' }); }
     finally { setSubmitting(false); }
@@ -70,6 +72,15 @@ const Claims: React.FC = () => {
     setMessages(prev => [...prev, m]);
     setNewMessage('');
     setTimeout(() => setMessages(prev => [...prev, { id: (Date.now()+1).toString(), claimId: selectedClaim.id, sender: 'support', message: 'Mensagem recebida.', timestamp: new Date() }]), 1500);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setClaimDocuments(prev => [...prev, ...files]);
+  };
+
+  const removeDocument = (index: number) => {
+    setClaimDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
   const getStatusBadge = (status: string) => {
@@ -112,67 +123,167 @@ const Claims: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Sinistros</h1>
-            <p className="text-muted-foreground">Gerencie seus sinistros e acompanhe o status</p>
+            <h1 className="text-3xl font-bold mb-2">Claims</h1>
+            <p className="text-muted-foreground">
+              Manage your claims and track request status
+            </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="gradient-primary"><Plus className="w-4 h-4 mr-2" />Novo Sinistro</Button>
+              <Button className="gradient-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                New Claim
+              </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Novo Sinistro</DialogTitle>
-                <DialogDescription>Informe os detalhes do evento</DialogDescription>
+                <DialogTitle>New Claim</DialogTitle>
+                <DialogDescription>
+                  Fill in the claim data and attach the necessary documents
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmitClaim} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Tipo de Sinistro *</Label>
-                    <Select value={newClaim.claimType} onValueChange={v => setNewClaim(p => ({ ...p, claimType: v }))}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <Label htmlFor="claimType">Claim Type *</Label>
+                    <Select value={newClaim.claimType} onValueChange={(value) => setNewClaim(prev => ({ ...prev, claimType: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="income_loss">Perda de Renda</SelectItem>
+                        <SelectItem value="accident">Accident</SelectItem>
+                        <SelectItem value="medical">Medical Expenses</SelectItem>
+                        <SelectItem value="income_loss">Income Loss</SelectItem>
+                        <SelectItem value="property">Property Damage</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Data do Incidente *</Label>
-                    <Input type="date" value={newClaim.incidentDate} onChange={e => setNewClaim(p => ({ ...p, incidentDate: e.target.value }))} required />
+                    <Label htmlFor="incidentDate">Incident Date *</Label>
+                    <Input
+                      id="incidentDate"
+                      type="date"
+                      value={newClaim.incidentDate}
+                      onChange={(e) => setNewClaim(prev => ({ ...prev, incidentDate: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Valor do Sinistro (R$) *</Label>
-                    <Input type="number" min="0" step="0.01" value={newClaim.claimAmount} onChange={e => setNewClaim(p => ({ ...p, claimAmount: e.target.value }))} required />
+                    <Label htmlFor="claimAmount">Claim Amount (R$) *</Label>
+                    <Input
+                      id="claimAmount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newClaim.claimAmount}
+                      onChange={(e) => setNewClaim(prev => ({ ...prev, claimAmount: e.target.value }))}
+                      placeholder="0.00"
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>ID da Apólice (opcional)</Label>
-                    <Input value={newClaim.policyId} onChange={e => setNewClaim(p => ({ ...p, policyId: e.target.value }))} placeholder="policy_id" />
+                    <Label htmlFor="policyId">Policy ID</Label>
+                    <Input
+                      id="policyId"
+                      value={newClaim.policyId}
+                      onChange={(e) => setNewClaim(prev => ({ ...prev, policyId: e.target.value }))}
+                      placeholder="policy_123"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Descrição *</Label>
-                  <Textarea rows={4} value={newClaim.description} onChange={e => setNewClaim(p => ({ ...p, description: e.target.value }))} required />
+                  <Label htmlFor="description">Claim Description *</Label>
+                  <Textarea
+                    id="description"
+                    value={newClaim.description}
+                    onChange={(e) => setNewClaim(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe in detail what happened..."
+                    rows={4}
+                    required
+                  />
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1" disabled={submitting}>{submitting ? 'Enviando...' : 'Enviar Sinistro'}</Button>
+                
+                <div className="space-y-2">
+                  <Label>Attached Documents</Label>
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                    <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Send photos, PDFs or other related documents
+                    </p>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="claim-documents"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      asChild
+                    >
+                      <label htmlFor="claim-documents" className="cursor-pointer">
+                        Select Files
+                      </label>
+                    </Button>
+                  </div>
+                  
+                  {claimDocuments.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Selected Files</Label>
+                      <div className="space-y-2">
+                        {claimDocuments.map((file, index) => (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <span className="flex-1 text-sm">{file.name}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeDocument(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" className="flex-1" disabled={submitting}>
+                    {submitting ? 'Submitting...' : 'Submit Claim'}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
           </Dialog>
         </div>
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input className="pl-10" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search by number or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="submitted">Enviado</SelectItem>
-              <SelectItem value="under_review">Em Análise</SelectItem>
-              <SelectItem value="approved">Aprovado</SelectItem>
-              <SelectItem value="rejected">Rejeitado</SelectItem>
-              <SelectItem value="paid">Pago</SelectItem>
+              <SelectItem value="all">All status</SelectItem>
+              <SelectItem value="submitted">Submitted</SelectItem>
+              <SelectItem value="under_review">Under Review</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -205,16 +316,25 @@ const Claims: React.FC = () => {
         {filteredClaims.length === 0 && (
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Nenhum sinistro encontrado</h3>
-            <p className="text-muted-foreground">{searchTerm || statusFilter !== 'all' ? 'Ajuste os filtros.' : 'Você ainda não possui sinistros.'}</p>
+            <h3 className="text-lg font-medium mb-2">No claims found</h3>
+            <p className="text-muted-foreground">
+              {searchTerm || statusFilter !== 'all' 
+                ? 'Try adjusting the search filters.'
+                : 'You don\'t have any registered claims yet.'}
+            </p>
           </div>
         )}
         {selectedClaim && (
           <Dialog open={!!selectedClaim} onOpenChange={() => setSelectedClaim(null)}>
             <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2"><MessageCircle className="w-5 h-5" />Chat - {selectedClaim.claimNumber}</DialogTitle>
-                <DialogDescription>Converse sobre este sinistro</DialogDescription>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  Chat - {selectedClaim.claimNumber}
+                </DialogTitle>
+                <DialogDescription>
+                  Chat with our team about this claim
+                </DialogDescription>
               </DialogHeader>
               <div className="flex-1 flex flex-col min-h-0">
                 <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 bg-muted/30 rounded-lg">
@@ -228,8 +348,15 @@ const Claims: React.FC = () => {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <Input placeholder="Digite sua mensagem..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} />
-                  <Button onClick={sendMessage} disabled={!newMessage.trim()}><Send className="w-4 h-4" /></Button>
+                  <Input
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  />
+                  <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+                    <Send className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </DialogContent>
