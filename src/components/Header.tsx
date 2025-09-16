@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw, Package, Settings2 } from 'lucide-react';
+import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw, Package, Settings2, BarChart3 } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { user, logout, syncWalletBalance } = useAuth();
@@ -194,6 +194,12 @@ export const Header: React.FC = () => {
                     <Link to="/admin/products">
                       <Settings2 className="mr-2 h-4 w-4" />
                       Admin Products
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/pool-analytics">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Pool Analytics
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

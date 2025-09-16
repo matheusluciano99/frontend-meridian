@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import heroImage from '@/assets/hero-insurance.jpg';
 import { ProductsService } from '@/services/productsService';
 import { AnchorsService } from '@/services/anchorsService';
+import { sorobanService, PoolMetrics } from '@/services/sorobanService';
 import { useAuth } from '@/contexts/AuthContext';
 import { AnchorTransaction } from '@/types';
 import { Product } from '@/types';
@@ -29,6 +30,8 @@ const Dashboard: React.FC = () => {
   const [priceFilter, setPriceFilter] = useState<string>('all');
   const { toast } = useToast();
   const productsSectionRef = useRef<HTMLDivElement>(null);
+  const [poolMetrics, setPoolMetrics] = useState<PoolMetrics | null>(null);
+  const [poolLoading, setPoolLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -63,6 +66,33 @@ const Dashboard: React.FC = () => {
     };
     loadAnchorData();
   }, [user]);
+
+  useEffect(() => {
+    const loadPoolMetrics = async () => {
+      try {
+        const metrics = await sorobanService.getPoolMetrics();
+        setPoolMetrics(metrics);
+      } catch (error) {
+        console.error('Erro ao carregar métricas do pool:', error);
+        // Em caso de erro, definir valores padrão
+        setPoolMetrics({
+          current_balance: { stroops: '0', xlm: '0.0000000' },
+          statistics: {
+            total_collected_xlm: 0,
+            total_paid_out_xlm: 0,
+            net_balance_xlm: 0,
+            transaction_count: 0,
+            collection_count: 0,
+            payout_count: 0
+          },
+          recent_transactions: []
+        });
+      } finally {
+        setPoolLoading(false);
+      }
+    };
+    loadPoolMetrics();
+  }, []);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,15 +247,43 @@ const Dashboard: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Risk Pool balance placeholder (populado via useEffect patch posterior) */}
+              {/* Risk Pool balance */}
               <Card className="glass-card border-border/50">
                 <CardHeader className="pb-3">
                   <CardTitle>Risk Pool</CardTitle>
                   <CardDescription>Pool balance (XLM)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{/* poolBalance */}</p>
-                  <p className="text-xs text-muted-foreground">auto-updated</p>
+                  {poolLoading ? (
+                    <p className="text-3xl font-bold">Loading...</p>
+                  ) : (
+                    <p className="text-3xl font-bold">
+                      {poolMetrics?.current_balance.xlm || '0.0000000'} XLM
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-xs text-muted-foreground">
+                      {poolMetrics ? `${poolMetrics.statistics.collection_count} collections, ${poolMetrics.statistics.payout_count} payouts` : 'auto-updated'}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        setPoolLoading(true);
+                        try {
+                          const metrics = await sorobanService.getPoolMetrics();
+                          setPoolMetrics(metrics);
+                        } catch (error) {
+                          console.error('Erro ao atualizar métricas do pool:', error);
+                        } finally {
+                          setPoolLoading(false);
+                        }
+                      }}
+                      disabled={poolLoading}
+                    >
+                      {poolLoading ? '...' : 'Refresh'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 

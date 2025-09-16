@@ -17,6 +17,7 @@ import AdminProduct from "./pages/AdminProduct";
 import Profile from "./pages/Profile";
 import Claims from "./pages/Claims";
 import Checkout from "./pages/Checkout";
+import PoolAnalytics from "./pages/PoolAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/checkout/:policyId" element={<Checkout />} />
               <Route path="/admin/payout" element={<AdminPayout />} />
               <Route path="/admin/products" element={<AdminProduct />} />
+              <Route path="/pool-analytics" element={<PoolAnalytics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
