@@ -85,6 +85,8 @@ export interface WalletContextType {
   disconnectWallet: () => Promise<void>;
   signTransaction: (transactionXdr: string) => Promise<string>;
   getBalance: () => Promise<number>;
+  checkAccountActivation: () => Promise<boolean>;
+  requestTestnetFunds: () => Promise<boolean>;
 }
 
 export interface PaymentMethod {

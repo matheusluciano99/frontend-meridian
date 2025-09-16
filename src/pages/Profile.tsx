@@ -29,7 +29,17 @@ import {
   Settings,
   Copy,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  Briefcase,
+  DollarSign,
+  MapPin,
+  Heart,
+  Car,
+  Home,
+  GraduationCap,
+  Users,
+  FileSearch
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +53,25 @@ interface UserProfile {
   document?: string;
   kycStatus: 'pending' | 'verified' | 'rejected';
   kycDocumentUrl?: string;
+  // Informações extras para avaliação de risco
+  birthDate?: string;
+  age?: number;
+  occupation?: string;
+  monthlyIncome?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+  dependents?: number;
+  education?: 'elementary' | 'high_school' | 'college' | 'graduate' | 'postgraduate';
+  hasHealthInsurance?: boolean;
+  hasLifeInsurance?: boolean;
+  hasAutoInsurance?: boolean;
+  hasHomeInsurance?: boolean;
+  smoker?: boolean;
+  preExistingConditions?: string[];
+  hobbies?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,25 +89,89 @@ const Profile: React.FC = () => {
   const { wallet, isConnecting, connectWallet, disconnectWallet, getBalance } = useWallet();
   const { toast } = useToast();
   
+  // Estado para controlar qual aba está ativa
+  const [activeTab, setActiveTab] = useState('personal');
+  
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingExtra, setEditingExtra] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [refreshingWallet, setRefreshingWallet] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    document: ''
+    document: '',
+    // Informações extras
+    birthDate: '',
+    occupation: '',
+    monthlyIncome: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widowed',
+    dependents: 0,
+    education: 'high_school' as 'elementary' | 'high_school' | 'college' | 'graduate' | 'postgraduate',
+    hasHealthInsurance: false,
+    hasLifeInsurance: false,
+    hasAutoInsurance: false,
+    hasHomeInsurance: false,
+    smoker: false,
+    preExistingConditions: [] as string[],
+    hobbies: [] as string[]
   });
 
   useEffect(() => {
     fetchProfile();
     fetchActivities();
   }, []);
+
+  // Efeito para atualizar dados da carteira quando a aba "wallet" for aberta
+  useEffect(() => {
+    if (activeTab === 'wallet') {
+      console.log('💳 Aba carteira aberta - atualizando dados...');
+      refreshWalletData();
+    }
+  }, [activeTab]);
+
+  // Função para atualizar todos os dados da carteira
+  const refreshWalletData = async () => {
+    if (wallet) {
+      setRefreshingWallet(true);
+      try {
+        console.log('🔄 Atualizando dados da carteira...');
+        
+        // Atualizar saldo
+        await getBalance();
+        
+        // Verificar status da conta
+        // Note: As funções checkAccountActivation e requestTestnetFunds 
+        // serão chamadas pelos botões específicos quando necessário
+        
+        console.log('✅ Dados da carteira atualizados');
+        
+        toast({
+          title: "Dados atualizados",
+          description: "Informações da carteira foram atualizadas com sucesso.",
+        });
+      } catch (error) {
+        console.error('❌ Erro ao atualizar dados da carteira:', error);
+        toast({
+          title: "Erro ao atualizar",
+          description: "Não foi possível atualizar os dados da carteira.",
+          variant: "destructive"
+        });
+      } finally {
+        setRefreshingWallet(false);
+      }
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -93,6 +186,25 @@ const Profile: React.FC = () => {
         document: '123.456.789-00',
         kycStatus: 'pending',
         kycDocumentUrl: undefined,
+        // Informações extras mockadas
+        birthDate: '1990-05-15',
+        age: 34,
+        occupation: 'Engenheiro de Software',
+        monthlyIncome: 15000,
+        address: 'Rua das Flores, 123',
+        city: 'São Paulo',
+        state: 'SP',
+        zipCode: '01234-567',
+        maritalStatus: 'married',
+        dependents: 2,
+        education: 'college',
+        hasHealthInsurance: true,
+        hasLifeInsurance: false,
+        hasAutoInsurance: true,
+        hasHomeInsurance: false,
+        smoker: false,
+        preExistingConditions: ['Hipertensão leve'],
+        hobbies: ['Futebol', 'Leitura', 'Viagem'],
         createdAt: new Date('2024-01-15'),
         updatedAt: new Date()
       };
@@ -103,6 +215,24 @@ const Profile: React.FC = () => {
         email: mockProfile.email,
         phone: mockProfile.phone || '',
         document: mockProfile.document || '',
+        // Informações extras
+        birthDate: mockProfile.birthDate || '',
+        occupation: mockProfile.occupation || '',
+        monthlyIncome: mockProfile.monthlyIncome?.toString() || '',
+        address: mockProfile.address || '',
+        city: mockProfile.city || '',
+        state: mockProfile.state || '',
+        zipCode: mockProfile.zipCode || '',
+        maritalStatus: mockProfile.maritalStatus || 'single',
+        dependents: mockProfile.dependents || 0,
+        education: mockProfile.education || 'high_school',
+        hasHealthInsurance: mockProfile.hasHealthInsurance || false,
+        hasLifeInsurance: mockProfile.hasLifeInsurance || false,
+        hasAutoInsurance: mockProfile.hasAutoInsurance || false,
+        hasHomeInsurance: mockProfile.hasHomeInsurance || false,
+        smoker: mockProfile.smoker || false,
+        preExistingConditions: mockProfile.preExistingConditions || [],
+        hobbies: mockProfile.hobbies || []
       });
     } catch (error) {
       toast({
@@ -171,10 +301,12 @@ const Profile: React.FC = () => {
       setProfile(prev => prev ? {
         ...prev,
         ...formData,
+        monthlyIncome: formData.monthlyIncome ? parseFloat(formData.monthlyIncome) : undefined,
         updatedAt: new Date()
       } : null);
       
       setEditing(false);
+      setEditingExtra(false);
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso.",
@@ -197,9 +329,57 @@ const Profile: React.FC = () => {
         email: profile.email,
         phone: profile.phone || '',
         document: profile.document || '',
+        // Informações extras
+        birthDate: profile.birthDate || '',
+        occupation: profile.occupation || '',
+        monthlyIncome: profile.monthlyIncome?.toString() || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zipCode: profile.zipCode || '',
+        maritalStatus: profile.maritalStatus || 'single',
+        dependents: profile.dependents || 0,
+        education: profile.education || 'high_school',
+        hasHealthInsurance: profile.hasHealthInsurance || false,
+        hasLifeInsurance: profile.hasLifeInsurance || false,
+        hasAutoInsurance: profile.hasAutoInsurance || false,
+        hasHomeInsurance: profile.hasHomeInsurance || false,
+        smoker: profile.smoker || false,
+        preExistingConditions: profile.preExistingConditions || [],
+        hobbies: profile.hobbies || []
       });
     }
     setEditing(false);
+  };
+
+  const handleCancelExtra = () => {
+    if (profile) {
+      setFormData({
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone || '',
+        document: profile.document || '',
+        // Informações extras
+        birthDate: profile.birthDate || '',
+        occupation: profile.occupation || '',
+        monthlyIncome: profile.monthlyIncome?.toString() || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zipCode: profile.zipCode || '',
+        maritalStatus: profile.maritalStatus || 'single',
+        dependents: profile.dependents || 0,
+        education: profile.education || 'high_school',
+        hasHealthInsurance: profile.hasHealthInsurance || false,
+        hasLifeInsurance: profile.hasLifeInsurance || false,
+        hasAutoInsurance: profile.hasAutoInsurance || false,
+        hasHomeInsurance: profile.hasHomeInsurance || false,
+        smoker: profile.smoker || false,
+        preExistingConditions: profile.preExistingConditions || [],
+        hobbies: profile.hobbies || []
+      });
+    }
+    setEditingExtra(false);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -355,14 +535,22 @@ const Profile: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Overview */}
           <div className="lg:col-span-2">
-            <Tabs defaultValue="personal" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="personal">Pessoal</TabsTrigger>
+            <Tabs 
+              defaultValue="personal" 
+              className="w-full"
+              onValueChange={(value) => {
+                console.log('🔄 Mudança de aba:', value);
+                setActiveTab(value);
+              }}
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="personal">Informações Básicas</TabsTrigger>
+                <TabsTrigger value="extra">Informações Pessoais</TabsTrigger>
                 <TabsTrigger value="kyc">Verificação</TabsTrigger>
                 <TabsTrigger value="wallet">Carteira</TabsTrigger>
               </TabsList>
 
-              {/* Personal Information */}
+              {/* Basic Information */}
               <TabsContent value="personal" className="space-y-6">
                 <Card className="glass-card border-border/50">
                   <CardHeader>
@@ -370,10 +558,10 @@ const Profile: React.FC = () => {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <User className="w-5 h-5" />
-                          Informações Pessoais
+                          Informações Básicas
                         </CardTitle>
                         <CardDescription>
-                          Gerencie seus dados pessoais e de contato
+                          Dados básicos de identificação e contato
                         </CardDescription>
                       </div>
                       {!editing ? (
@@ -415,7 +603,7 @@ const Profile: React.FC = () => {
                           id="name"
                           value={formData.name}
                           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                         />
                       </div>
                       <div className="space-y-2">
@@ -425,7 +613,7 @@ const Profile: React.FC = () => {
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                         />
                       </div>
                       <div className="space-y-2">
@@ -435,7 +623,7 @@ const Profile: React.FC = () => {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                           placeholder="(11) 99999-9999"
                         />
                       </div>
@@ -445,8 +633,309 @@ const Profile: React.FC = () => {
                           id="document"
                           value={formData.document}
                           onChange={(e) => setFormData(prev => ({ ...prev, document: e.target.value }))}
-                          disabled={!editing}
+                           disabled={!editingExtra}
                           placeholder="000.000.000-00"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Personal Information */}
+              <TabsContent value="extra" className="space-y-6">
+                <Card className="glass-card border-border/50">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileSearch className="w-5 h-5" />
+                          Informações Pessoais
+                        </CardTitle>
+                        <CardDescription>
+                          Dados pessoais detalhados para avaliação de risco em seguros
+                        </CardDescription>
+                      </div>
+                      {!editingExtra ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingExtra(true)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCancelExtra}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Cancelar
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleSave}
+                            disabled={saving}
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            {saving ? 'Salvando...' : 'Salvar'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Informações Demográficas */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        Informações Demográficas
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="birthDate">Data de Nascimento</Label>
+                          <Input
+                            id="birthDate"
+                            type="date"
+                            value={formData.birthDate}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
+                            disabled={!editingExtra}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maritalStatus">Estado Civil</Label>
+                          <select
+                            id="maritalStatus"
+                            value={formData.maritalStatus}
+                            onChange={(e) => setFormData(prev => ({ ...prev, maritalStatus: e.target.value as any }))}
+                            disabled={!editingExtra}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="single">Solteiro(a)</option>
+                            <option value="married">Casado(a)</option>
+                            <option value="divorced">Divorciado(a)</option>
+                            <option value="widowed">Viúvo(a)</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="dependents">Número de Dependentes</Label>
+                          <Input
+                            id="dependents"
+                            type="number"
+                            min="0"
+                            value={formData.dependents}
+                            onChange={(e) => setFormData(prev => ({ ...prev, dependents: parseInt(e.target.value) || 0 }))}
+                            disabled={!editingExtra}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="education">Escolaridade</Label>
+                          <select
+                            id="education"
+                            value={formData.education}
+                            onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value as any }))}
+                            disabled={!editingExtra}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="elementary">Ensino Fundamental</option>
+                            <option value="high_school">Ensino Médio</option>
+                            <option value="college">Ensino Superior</option>
+                            <option value="graduate">Pós-graduação</option>
+                            <option value="postgraduate">Mestrado/Doutorado</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Informações Profissionais e Financeiras */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-primary" />
+                        Informações Profissionais e Financeiras
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="occupation">Profissão/Ocupação</Label>
+                          <Input
+                            id="occupation"
+                            value={formData.occupation}
+                            onChange={(e) => setFormData(prev => ({ ...prev, occupation: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="Ex: Engenheiro, Médico, Vendedor..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="monthlyIncome">Renda Mensal (R$)</Label>
+                          <Input
+                            id="monthlyIncome"
+                            type="number"
+                            value={formData.monthlyIncome}
+                            onChange={(e) => setFormData(prev => ({ ...prev, monthlyIncome: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Endereço */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-primary" />
+                        Endereço
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2 space-y-2">
+                          <Label htmlFor="address">Endereço Completo</Label>
+                          <Input
+                            id="address"
+                            value={formData.address}
+                            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="Rua, número, complemento..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="city">Cidade</Label>
+                          <Input
+                            id="city"
+                            value={formData.city}
+                            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                            disabled={!editingExtra}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="state">Estado</Label>
+                          <Input
+                            id="state"
+                            value={formData.state}
+                            onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+                            disabled={!editingExtra}
+                            maxLength={2}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="zipCode">CEP</Label>
+                          <Input
+                            id="zipCode"
+                            value={formData.zipCode}
+                            onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
+                            disabled={!editingExtra}
+                            placeholder="00000-000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Informações de Saúde */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Heart className="w-5 h-5 text-primary" />
+                        Informações de Saúde
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.smoker}
+                              onChange={(e) => setFormData(prev => ({ ...prev, smoker: e.target.checked }))}
+                              disabled={!editingExtra}
+                              className="rounded border-input"
+                            />
+                            Fumante
+                          </Label>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="preExistingConditions">Condições Pré-existentes</Label>
+                          <Input
+                            id="preExistingConditions"
+                            value={formData.preExistingConditions.join(', ')}
+                            onChange={(e) => setFormData(prev => ({ 
+                              ...prev, 
+                              preExistingConditions: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                            }))}
+                            disabled={!editingExtra}
+                            placeholder="Ex: Diabetes, Hipertensão..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Seguros Atuais */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-primary" />
+                        Seguros Atuais
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasHealthInsurance"
+                            checked={formData.hasHealthInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasHealthInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasHealthInsurance" className="text-sm">Saúde</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasLifeInsurance"
+                            checked={formData.hasLifeInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasLifeInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasLifeInsurance" className="text-sm">Vida</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasAutoInsurance"
+                            checked={formData.hasAutoInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasAutoInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasAutoInsurance" className="text-sm">Auto</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasHomeInsurance"
+                            checked={formData.hasHomeInsurance}
+                            onChange={(e) => setFormData(prev => ({ ...prev, hasHomeInsurance: e.target.checked }))}
+                            disabled={!editingExtra}
+                            className="rounded border-input"
+                          />
+                          <Label htmlFor="hasHomeInsurance" className="text-sm">Residencial</Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hobbies e Atividades */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Hobbies e Atividades
+                      </h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="hobbies">Hobbies/Atividades (separados por vírgula)</Label>
+                        <Input
+                          id="hobbies"
+                          value={formData.hobbies.join(', ')}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            hobbies: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                          }))}
+                           disabled={!editingExtra}
+                          placeholder="Ex: Futebol, Leitura, Viagem, Esportes radicais..."
                         />
                       </div>
                     </div>
@@ -536,13 +1025,28 @@ const Profile: React.FC = () => {
                 {/* Freighter Wallet Connection */}
                 <Card className="glass-card border-border/50">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Wallet className="w-5 h-5" />
-                      Carteira Freighter
-                    </CardTitle>
-                    <CardDescription>
-                      Conecte sua carteira Freighter para pagamentos e recebimentos
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Wallet className="w-5 h-5" />
+                          Carteira Freighter
+                        </CardTitle>
+                        <CardDescription>
+                          Conecte sua carteira Freighter para pagamentos e recebimentos
+                        </CardDescription>
+                      </div>
+                      {wallet && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={refreshWalletData}
+                          disabled={refreshingWallet}
+                        >
+                          <RefreshCw className={`w-4 h-4 mr-2 ${refreshingWallet ? 'animate-spin' : ''}`} />
+                          {refreshingWallet ? 'Atualizando...' : 'Atualizar'}
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {!wallet ? (

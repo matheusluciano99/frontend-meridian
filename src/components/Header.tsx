@@ -1,5 +1,7 @@
 import React from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -10,12 +12,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings, Coins, FileText } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, syncWalletBalance } = useAuth();
+  const { wallet } = useWallet();
   const navigate = useNavigate();
+
+  const handleSyncBalance = async () => {
+    try {
+      console.log('🔄 Forçando sincronização do saldo...');
+      const balance = await syncWalletBalance();
+      console.log('✅ Sincronização concluída:', balance);
+    } catch (error) {
+      console.error('❌ Erro na sincronização:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -80,10 +92,32 @@ export const Header: React.FC = () => {
 
               {/* Balance */}
               <div className="flex items-center space-x-2 bg-primary/10 px-3 py-1.5 rounded-lg">
-                <Coins className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  {user.balance.toFixed(2)} XLM
-                </span>
+                {wallet ? (
+                  <>
+                    <Wallet className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      {user.balance.toFixed(2)} XLM
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSyncBalance}
+                      className="h-6 w-6 p-0"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Coins className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Conecte a carteira
+                    </span>
+                  </>
+                )}
               </div>
 
               <DropdownMenu>

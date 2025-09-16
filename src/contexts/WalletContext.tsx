@@ -62,20 +62,28 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
   const checkAccountActivation = async (publicKey: string, network: string) => {
     try {
       const baseUrl = network === 'testnet' 
-        ? '/horizon-testnet' 
-        : '/horizon';
+        ? 'https://horizon-testnet.stellar.org' 
+        : 'https://horizon.stellar.org';
       
       const accountUrl = `${baseUrl}/accounts/${publicKey}`;
+      console.log('🔍 Verificando conta:', accountUrl);
+      
       const response = await fetch(accountUrl);
+      console.log('📊 Status da resposta:', response.status);
       
       if (response.ok) {
+        console.log('✅ Conta ativada');
         return true;
       } else if (response.status === 404) {
+        console.log('❌ Conta não encontrada (não ativada)');
         return false;
       } else {
+        const errorText = await response.text();
+        console.error('🚨 Erro HTTP:', response.status, errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
+      console.error('🚨 Erro ao verificar conta:', error);
       throw error;
     }
   };
@@ -194,28 +202,35 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
   // Função interna para obter saldo (sem atualizar estado)
   const _getBalanceInternal = async (): Promise<number> => {
     if (!wallet || !(await isFreighterAvailable())) {
+      console.log('❌ Wallet não disponível para obter saldo');
       return 0;
     }
 
     try {
-      // Configurar URL baseada na rede (usando proxy local)
+      // Configurar URL baseada na rede (usando endpoints públicos)
       const baseUrl = wallet.network === 'testnet' 
-        ? '/horizon-testnet' 
-        : '/horizon';
+        ? 'https://horizon-testnet.stellar.org' 
+        : 'https://horizon.stellar.org';
       
       const accountUrl = `${baseUrl}/accounts/${wallet.publicKey}`;
+      console.log('💰 Buscando saldo:', accountUrl);
       
       // Obter dados da conta
       const response = await fetch(accountUrl);
+      console.log('📊 Status da resposta para saldo:', response.status);
       
       if (!response.ok) {
         if (response.status === 404) {
+          console.log('❌ Conta não encontrada para obter saldo');
           return 0;
         }
+        const errorText = await response.text();
+        console.error('🚨 Erro HTTP ao obter saldo:', response.status, errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const accountData = await response.json();
+      console.log('📄 Dados da conta recebidos:', accountData);
       
       // Procurar por XLM (nativo) nos balances
       const xlmBalance = accountData.balances?.find((balance: any) => 
@@ -224,12 +239,15 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
       
       if (xlmBalance) {
         const balance = parseFloat(xlmBalance.balance);
+        console.log('✅ Saldo XLM encontrado:', balance);
         return balance;
       } else {
+        console.log('⚠️ Nenhum saldo XLM encontrado');
         return 0;
       }
       
     } catch (error) {
+      console.error('🚨 Erro ao obter saldo:', error);
       return 0;
     }
   };
@@ -291,6 +309,48 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Verificar ativação da conta (função pública)
+  const checkAccountActivationPublic = async (): Promise<boolean> => {
+    if (!wallet) {
+      throw new Error('Carteira não conectada');
+    }
+    
+    return await checkAccountActivation(wallet.publicKey, wallet.network);
+  };
+
+  // Solicitar fundos de teste
+  const requestTestnetFunds = async (): Promise<boolean> => {
+    if (!wallet || wallet.network !== 'testnet') {
+      throw new Error('Apenas disponível para testnet');
+    }
+
+    try {
+      console.log('🪙 Solicitando fundos de teste para:', wallet.publicKey);
+      
+      const response = await fetch('https://horizon-testnet.stellar.org/friendbot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          addr: wallet.publicKey
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Fundos de teste solicitados com sucesso');
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error('🚨 Erro ao solicitar fundos:', response.status, errorText);
+        return false;
+      }
+    } catch (error) {
+      console.error('🚨 Erro ao solicitar fundos de teste:', error);
+      return false;
+    }
+  };
+
   return (
     <WalletContext.Provider value={{
       wallet,
@@ -298,7 +358,9 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
       connectWallet,
       disconnectWallet,
       signTransaction,
-      getBalance
+      getBalance,
+      checkAccountActivation: checkAccountActivationPublic,
+      requestTestnetFunds
     }}>
       {children}
     </WalletContext.Provider>
