@@ -29,9 +29,9 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ActiveCoverage {
   id: string;
   productName: string;
-  status: 'ACTIVE' | 'PAUSED' | 'EXPIRED';
-  startTime: Date;
-  endTime: Date;
+  status: string;
+  startTime: Date | null;
+  endTime: Date | null;
   totalCost: number;
   accumulatedCost: number;
   coverage: string;
@@ -39,6 +39,10 @@ interface ActiveCoverage {
   category: string;
   coverageAmount: number;
   popular?: boolean;
+  fundingBalance: number;
+  hourlyRate: number;
+  nextChargeAt: string | null;
+  hoursRemaining: number | null;
 }
 
 const Coverage: React.FC = () => {
@@ -155,25 +159,21 @@ const Coverage: React.FC = () => {
   };
 
   const getTimeRemaining = (coverage: ActiveCoverage) => {
+    if (!coverage.endTime) return '-';
     const now = new Date().getTime();
     const end = coverage.endTime.getTime();
     const remaining = end - now;
-
-    if (remaining <= 0) {
-      return 'Expired';
-    }
-
+    if (remaining <= 0) return 'Expired';
     const hours = Math.floor(remaining / (1000 * 60 * 60));
     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-    return `${hours}h ${minutes}m ${seconds}s`;
+    return `${hours}h ${minutes}m`;
   };
 
   const getProgressPercentage = (coverage: ActiveCoverage) => {
     const now = new Date().getTime();
-    const end = coverage.endTime.getTime();
-    const start = coverage.startTime.getTime();
+  if (!coverage.startTime || !coverage.endTime) return 0;
+  const end = coverage.endTime.getTime();
+  const start = coverage.startTime.getTime();
     const total = end - start;
     const remaining = end - now;
 
@@ -398,7 +398,7 @@ const Coverage: React.FC = () => {
                 )}
 
                 {/* Coverage Details */}
-                <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                   <div className="text-center p-3 bg-muted/30 rounded-lg">
                     <DollarSign className="w-4 h-4 text-primary mx-auto mb-1" />
                     <div className="font-bold text-sm">{coverage.coverage}</div>
@@ -411,20 +411,40 @@ const Coverage: React.FC = () => {
                     </div>
                     <div className="text-xs text-muted-foreground">Spent</div>
                   </div>
+                      <div className="text-center p-3 bg-muted/30 rounded-lg col-span-2">
+                        <div className="flex justify-center gap-6">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Funding</div>
+                            <div className="font-bold text-sm">{coverage.fundingBalance.toFixed(2)} XLM</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Hourly Rate</div>
+                            <div className="font-bold text-sm">{coverage.hourlyRate.toFixed(4)} XLM</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Hours Left</div>
+                            <div className="font-bold text-sm">{coverage.hoursRemaining !== null ? coverage.hoursRemaining : '-'}</div>
+                          </div>
+                        </div>
+                      </div>
                 </div>
 
                 {/* Dates */}
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Start:</span>
-                    <span>{coverage.startTime.toLocaleDateString('pt-BR')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">End:</span>
-                    <span>{coverage.endTime.toLocaleDateString('pt-BR')}</span>
-                  </div>
+                  {coverage.startTime && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Start:</span>
+                      <span>{coverage.startTime.toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  )}
+                  {coverage.endTime && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">End:</span>
+                      <span>{coverage.endTime.toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}

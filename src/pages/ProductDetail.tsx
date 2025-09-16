@@ -22,6 +22,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ProductsService } from '@/services/productsService';
 import { PoliciesService } from '@/services/policiesService';
+import { Policy } from '@/types';
+import { Input } from '@/components/ui/input';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,7 +36,12 @@ const ProductDetail: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [duration, setDuration] = useState([24]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [funding, setFunding] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [createdPolicy, setCreatedPolicy] = useState<Policy | null>(null);
+  const [fundAmount, setFundAmount] = useState('');
+  const [charges, setCharges] = useState<any[] | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -84,45 +91,54 @@ const ProductDetail: React.FC = () => {
     return product.basePrice;
   };
 
-  const handleActivate = async () => {
+  const handleCreate = async () => {
     if (!product || !user?.id) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado ou produto não encontrado.",
-        variant: "destructive"
-      });
+      toast({ title: 'Erro', description: 'Usuário não autenticado ou produto não encontrado.', variant: 'destructive' });
       return;
     }
-    
+    setCreating(true);
+    try {
+      const policy = await PoliciesService.create({ userId: user.id, productId: product.id });
+      setCreatedPolicy(policy);
+      toast({ title: 'Apólice criada', description: 'Agora adicione funding para ativar.' });
+    } catch (e:any) {
+      toast({ title: 'Erro ao criar', description: e.message, variant: 'destructive' });
+    } finally { setCreating(false); }
+  };
+
+  const handleFund = async () => {
+    if (!createdPolicy) { toast({ title: 'Crie a apólice primeiro', variant: 'destructive' }); return; }
+    const value = parseFloat(fundAmount);
+    if (isNaN(value) || value <= 0) { toast({ title: 'Valor inválido', variant: 'destructive' }); return; }
+    setFunding(true);
+    try {
+      const updated = await PoliciesService.fund(createdPolicy.id, value);
+      setCreatedPolicy(updated);
+      toast({ title: 'Funding adicionado', description: `Balance: ${(updated.funding_balance_xlm || 0).toFixed?.(2)}` });
+    } catch (e:any) {
+      toast({ title: 'Erro funding', description: e.message, variant: 'destructive' });
+    } finally { setFunding(false); }
+  };
+
+  const handleActivate = async () => {
+    if (!createdPolicy) { toast({ title: 'Crie e funde antes', variant: 'destructive' }); return; }
     setActivating(true);
     try {
-      // 1. Criar apólice
-      const policy = await PoliciesService.create({
-        userId: user.id,
-        productId: product.id
-      });
-
-      // 2. Ativar apólice
-      const activatedPolicy = await PoliciesService.activate(policy.id);
-
-      toast({
-        title: "Seguro ativado com sucesso!",
-        description: `Apólice ${activatedPolicy.policy_number} está ativa.`,
-      });
-
-      // 3. Redirecionar para cobertura
+      const activated = await PoliciesService.activate(createdPolicy.id);
+      setCreatedPolicy(activated);
+      toast({ title: 'Seguro ativado', description: `Status: ${activated.status}` });
       navigate('/coverage');
-      
-    } catch (error: any) {
-      console.error('Erro ao ativar seguro:', error);
-      toast({
-        title: "Erro ao ativar seguro",
-        description: error.message || "Não foi possível ativar o seguro. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setActivating(false);
-    }
+    } catch (e:any) {
+      toast({ title: 'Erro ativar', description: e.message, variant: 'destructive' });
+    } finally { setActivating(false); }
+  };
+
+  const loadCharges = async () => {
+    if (!createdPolicy) return;
+    try {
+      const data = await PoliciesService.getCharges(createdPolicy.id);
+      setCharges(data.charges);
+    } catch {}
   };
 
   if (loading) {
@@ -142,7 +158,7 @@ const ProductDetail: React.FC = () => {
             </Button>
             <ChevronRight className="w-4 h-4" />
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm"
               onClick={() => navigate('/products')}
               className="h-auto p-1 text-muted-foreground hover:text-foreground"
@@ -210,38 +226,53 @@ const ProductDetail: React.FC = () => {
             Voltar aos Produtos
           </Button>
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: product.name,
-                  text: product.description,
-                  url: window.location.href
-                });
-              } else {
-                navigator.clipboard.writeText(window.location.href);
-                toast({
-                  title: "Link copiado!",
-                  description: "O link do produto foi copiado para a área de transferência.",
-                });
-              }
-            }}
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Compartilhar
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Product Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Header */}
+          <div className="flex gap-3 items-center">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: product.name,
+                    text: product.description,
+                    url: window.location.href
+                  });
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({
+                    title: "Link copiado!",
+                    description: "O link do produto foi copiado para a área de transferência.",
+                  });
+                }
+              }}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Compartilhar
+            </Button>
+          {!createdPolicy && (
+            <Button onClick={handleCreate} disabled={creating} className="gradient-primary">
+              {creating ? 'Criando...' : 'Criar Apólice'}
+            </Button>
+          )}
+          {createdPolicy && createdPolicy.status !== 'ACTIVE' && (
+            <div className="flex gap-3">
+              <div className="flex items-end gap-2">
+                <Input placeholder="Funding (XLM)" value={fundAmount} onChange={e=>setFundAmount(e.target.value)} className="w-32" />
+                <Button variant="outline" onClick={handleFund} disabled={funding}>{funding ? 'Enviando...' : 'Fund'}</Button>
+              </div>
+              <Button onClick={handleActivate} disabled={activating || (createdPolicy.funding_balance_xlm || 0) < (createdPolicy.hourly_rate_xlm || 0)} className="gradient-primary">
+                {activating ? 'Ativando...' : 'Ativar'}
+              </Button>
+            </div>
+          )}
+          {createdPolicy && createdPolicy.status === 'ACTIVE' && (
+            <Button variant="secondary" onClick={loadCharges}>Recarregar Cobranças</Button>
+          )}
+          </div>
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex-1 pr-6">
                     <CardTitle className="text-2xl flex items-center gap-3">
                       {product.name}
                       {product.popular && (
@@ -268,6 +299,54 @@ const ProductDetail: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
+            {createdPolicy && (
+              <div className="mt-10 grid gap-6 md:grid-cols-2 w-full">
+                <Card>
+                  <CardHeader><CardTitle>Status da Apólice</CardTitle></CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div><strong>ID:</strong> {createdPolicy.id}</div>
+                    <div><strong>Status:</strong> {createdPolicy.status}</div>
+                    <div><strong>Funding:</strong> {(createdPolicy.funding_balance_xlm || 0).toFixed?.(2)} XLM</div>
+                    <div><strong>Hourly Rate:</strong> {(createdPolicy.hourly_rate_xlm || 0).toFixed?.(4)} XLM</div>
+                    <div><strong>Next Charge:</strong> {createdPolicy.next_charge_at || '-'}</div>
+                    <div><strong>Total Pago:</strong> {(createdPolicy.total_premium_paid_xlm || 0).toFixed?.(4)} XLM</div>
+                    <div><strong>Horas Restantes (aprox):</strong> {(() => {
+                      const bal = createdPolicy.funding_balance_xlm || 0;
+                      const rate = createdPolicy.hourly_rate_xlm || 0;
+                      if (!rate || rate <= 0) return '-';
+                      return (bal / rate).toFixed(2);
+                    })()}</div>
+                  </CardContent>
+                </Card>
+                {createdPolicy.status === 'ACTIVE' && (
+                  <Card>
+                    <CardHeader><CardTitle>Charges</CardTitle></CardHeader>
+                    <CardContent>
+                      {!charges && <p className="text-sm text-muted-foreground">Clique em "Recarregar Cobranças"</p>}
+                      {charges && charges.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma cobrança ainda.</p>}
+                      {charges && charges.length > 0 && (
+                        <div className="max-h-60 overflow-y-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-left text-muted-foreground border-b"><th>Ref</th><th>Amount</th><th>When</th></tr>
+                            </thead>
+                            <tbody>
+                              {charges.map(c => (
+                                <tr key={c.ref || c.created_at} className="border-b border-border/20">
+                                  <td className="pr-2 truncate max-w-[120px]" title={c.ref}>{c.ref || '-'}</td>
+                                  <td className="pr-2">{Number(c.amount_xlm).toFixed(4)}</td>
+                                  <td>{new Date(c.created_at).toLocaleString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
 
             {/* Benefits */}
             <Card className="glass-card border-border/50">
@@ -342,7 +421,7 @@ const ProductDetail: React.FC = () => {
             </Card>
           </div>
 
-          {/* Simulator & Activation */}
+          {/* Simulator (legacy purchase button removido para fluxo criar->fund->ativar) */}
           <div className="space-y-6">
             {/* Price Calculator */}
             <Card className="glass-card border-border/50 sticky top-24">
@@ -390,46 +469,10 @@ const ProductDetail: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Activate Button */}
-                <Button 
-                  onClick={handleActivate}
-                  disabled={activating}
-                  className="w-full gradient-primary text-white font-medium py-3 h-auto"
-                >
-                  {activating ? (
-                    <>
-                      <Zap className="w-4 h-4 mr-2 animate-pulse" />
-                      Comprando e Ativando...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Comprar e Ativar - R$ {product.basePrice.toFixed(2)}
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-xs text-center text-muted-foreground">
-                  Ativação instantânea via blockchain Stellar
-                </p>
-
-                {/* Other Payment Methods Button */}
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate(`/checkout/policy_${product.id}`)}
-                  className="w-full mt-3"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Outras Formas de Pagamento
-                </Button>
-                
-                <p className="text-xs text-center text-muted-foreground mt-2">
-                  PIX, Anchor e outras opções de pagamento
-                </p>
+                <p className="text-xs text-center text-muted-foreground">Crie a apólice, adicione funding e ative acima.</p>
               </CardContent>
             </Card>
           </div>
-        </div>
       </div>
     </Layout>
   );

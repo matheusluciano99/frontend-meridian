@@ -1,27 +1,5 @@
 import { supabase } from '@/lib/supabase';
-
-export interface Policy {
-  id: string;
-  user_id: string;
-  product_id: string;
-  policy_number: string;
-  status: 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'EXPIRED';
-  premium_amount: number;
-  coverage_amount: number;
-  start_date: string;
-  end_date: string;
-  auto_renewal: boolean;
-  created_at: string;
-  updated_at: string;
-  product?: {
-    id: string;
-    name: string;
-    code: string;
-    coverage_amount: number;
-    coverage_duration: number;
-    coverage_type: string;
-  };
-}
+import { Policy } from '@/types';
 
 export interface CreatePolicyRequest {
   userId: string;
@@ -156,5 +134,40 @@ export class PoliciesService {
       console.error('Erro ao pausar apólice:', error);
       throw new Error('Não foi possível pausar a apólice. Tente novamente.');
     }
+  }
+
+  static async fund(policyId: string, amount: number): Promise<Policy> {
+    try {
+      const token = await this.getAuthToken();
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/policies/${policyId}/fund`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ amount })
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ao adicionar funding: ${response.statusText} - ${errorText}`);
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Erro funding policy', e);
+      throw e;
+    }
+  }
+
+  static async getCharges(policyId: string): Promise<{ policy_id: string; total: number; charges: any[] }> {
+    const token = await this.getAuthToken();
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const res = await fetch(`${API_BASE_URL}/policies/${policyId}/charges`, {
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      }
+    });
+    if (!res.ok) throw new Error('Erro ao obter cobranças');
+    return res.json();
   }
 }
