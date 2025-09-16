@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   kycStatus: 'pending' | 'verified' | 'rejected';
+  balance: number;
 }
 
 export interface Product {
@@ -67,4 +68,32 @@ export interface SorobanResponse {
   txHash: string;
   success: boolean;
   message?: string;
+}
+
+// Tipos para integração com Freighter
+export interface WalletInfo {
+  publicKey: string;
+  isConnected: boolean;
+  network: 'testnet' | 'mainnet';
+  balance?: number;
+}
+
+export interface WalletContextType {
+  wallet: WalletInfo | null;
+  isConnecting: boolean;
+  connectWallet: () => Promise<void>;
+  disconnectWallet: () => Promise<void>;
+  signTransaction: (transactionXdr: string) => Promise<string>;
+  getBalance: () => Promise<number>;
+}
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  type: 'xlm' | 'pix' | 'anchor' | 'freighter';
+  icon: React.ReactNode;
+  description: string;
+  processingTime: string;
+  fees: number;
+  available: boolean;
 }
