@@ -16,13 +16,6 @@ export const Footer: React.FC = () => {
             </span>
           </div>
 
-          {/* Frase de destaque */}
-          <div className="text-center md:text-right">
-            <p className="text-sm text-muted-foreground italic">
-              "O seguro morreu de velho"
-            </p>
-          </div>
-
           {/* Copyright */}
           <div className="text-center md:text-left">
             <p className="text-xs text-muted-foreground">
