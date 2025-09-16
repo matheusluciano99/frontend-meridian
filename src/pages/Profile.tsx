@@ -26,10 +26,14 @@ import {
   Download,
   ExternalLink,
   Activity,
-  Settings
+  Settings,
+  Copy,
+  LogOut,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWallet } from '@/contexts/WalletContext';
 
 interface UserProfile {
   id: string;
@@ -37,7 +41,6 @@ interface UserProfile {
   name: string;
   phone?: string;
   document?: string;
-  walletAddress?: string;
   kycStatus: 'pending' | 'verified' | 'rejected';
   kycDocumentUrl?: string;
   createdAt: Date;
@@ -54,6 +57,7 @@ interface ActivityLog {
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
+  const { wallet, isConnecting, connectWallet, disconnectWallet, getBalance } = useWallet();
   const { toast } = useToast();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -68,8 +72,7 @@ const Profile: React.FC = () => {
     name: '',
     email: '',
     phone: '',
-    document: '',
-    walletAddress: ''
+    document: ''
   });
 
   useEffect(() => {
@@ -88,7 +91,6 @@ const Profile: React.FC = () => {
         name: user?.name || 'João Silva',
         phone: '+55 11 99999-9999',
         document: '123.456.789-00',
-        walletAddress: 'GCKFBEIYTKP...XLWVYHS',
         kycStatus: 'pending',
         kycDocumentUrl: undefined,
         createdAt: new Date('2024-01-15'),
@@ -101,7 +103,6 @@ const Profile: React.FC = () => {
         email: mockProfile.email,
         phone: mockProfile.phone || '',
         document: mockProfile.document || '',
-        walletAddress: mockProfile.walletAddress || ''
       });
     } catch (error) {
       toast({
@@ -196,7 +197,6 @@ const Profile: React.FC = () => {
         email: profile.email,
         phone: profile.phone || '',
         document: profile.document || '',
-        walletAddress: profile.walletAddress || ''
       });
     }
     setEditing(false);
@@ -229,6 +229,49 @@ const Profile: React.FC = () => {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet();
+      toast({
+        title: "Carteira conectada",
+        description: "Sua carteira Freighter foi conectada com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao conectar carteira:', error);
+      toast({
+        title: "Erro ao conectar carteira",
+        description: "Não foi possível conectar à carteira Freighter. Verifique se a extensão está instalada.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDisconnectWallet = () => {
+    disconnectWallet();
+    toast({
+      title: "Carteira desconectada",
+      description: "Sua carteira foi desconectada com sucesso.",
+    });
+  };
+
+  const handleRefreshBalance = async () => {
+    if (wallet) {
+      try {
+        const balance = await getBalance();
+        toast({
+          title: "Saldo atualizado",
+          description: `Saldo atual: ${balance.toFixed(2)} XLM`,
+        });
+      } catch (error) {
+        toast({
+          title: "Erro ao atualizar saldo",
+          description: "Não foi possível atualizar o saldo da carteira.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -490,47 +533,127 @@ const Profile: React.FC = () => {
 
               {/* Wallet */}
               <TabsContent value="wallet" className="space-y-6">
+                {/* Freighter Wallet Connection */}
                 <Card className="glass-card border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Wallet className="w-5 h-5" />
-                      Carteira Stellar
+                      Carteira Freighter
                     </CardTitle>
                     <CardDescription>
-                      Gerencie seu endereço da carteira Stellar
+                      Conecte sua carteira Freighter para pagamentos e recebimentos
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="walletAddress">Endereço da Carteira</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="walletAddress"
-                          value={formData.walletAddress}
-                          onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
-                          disabled={!editing}
-                          placeholder="GCKFBEIYTKP...XLWVYHS"
-                        />
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="w-4 h-4" />
+                  <CardContent className="space-y-6">
+                    {!wallet ? (
+                      <div className="text-center py-8">
+                        <Wallet className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Conectar Carteira Freighter</h3>
+                        <p className="text-muted-foreground mb-6">
+                          Conecte sua carteira Freighter para fazer pagamentos e receber sinistros
+                        </p>
+                        <Button 
+                          onClick={handleConnectWallet}
+                          disabled={isConnecting}
+                          size="lg"
+                          className="gradient-primary"
+                        >
+                          <Wallet className="w-5 h-5 mr-2" />
+                          {isConnecting ? 'Conectando...' : 'Conectar Carteira'}
                         </Button>
+                        
+                        <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                          <h4 className="font-medium mb-2">Como conectar:</h4>
+                          <ol className="text-sm text-muted-foreground space-y-1 text-left">
+                            <li>1. Instale a extensão Freighter no seu navegador</li>
+                            <li>2. Crie ou importe sua carteira Stellar</li>
+                            <li>3. Clique em "Conectar Carteira" acima</li>
+                            <li>4. Aprove a conexão na extensão</li>
+                          </ol>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Wallet Info */}
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Wallet className="w-5 h-5 text-green-600" />
+                              <span className="font-medium text-green-700 dark:text-green-300">
+                                Carteira Conectada
+                              </span>
+                            </div>
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300">
+                              {wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <Label className="text-sm text-muted-foreground">Endereço da Carteira</Label>
+                              <div className="flex items-center gap-2 mt-1">
+                                <code className="flex-1 bg-background px-3 py-2 rounded border text-sm font-mono">
+                                  {wallet.publicKey}
+                                </code>
+                                <Button variant="outline" size="sm">
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-sm text-muted-foreground">Saldo XLM</Label>
+                              <div className="mt-1">
+                                <span className="text-2xl font-bold text-green-600">
+                                  {wallet.balance?.toFixed(2) || '0.00'} XLM
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={handleRefreshBalance}
+                            className="flex-1"
+                          >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            Atualizar Saldo
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            onClick={handleDisconnectWallet}
+                            className="flex-1"
+                          >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Desconectar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     
+                    {/* Info Card */}
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
                       <div className="flex items-start gap-3">
                         <Wallet className="w-5 h-5 text-primary mt-1" />
                         <div>
-                          <h3 className="font-medium text-primary mb-1">Sobre a Carteira Stellar</h3>
+                          <h3 className="font-medium text-primary mb-1">Sobre a Carteira Freighter</h3>
                           <p className="text-sm text-muted-foreground">
-                            Sua carteira Stellar é usada para receber pagamentos de sinistros 
-                            e gerenciar transações na blockchain. Mantenha-a segura e atualizada.
+                            A Freighter é uma carteira segura para a rede Stellar. Use-a para fazer pagamentos 
+                            de apólices e receber pagamentos de sinistros diretamente na blockchain.
                           </p>
                         </div>
                       </div>
                     </div>
+
                   </CardContent>
                 </Card>
+
               </TabsContent>
             </Tabs>
           </div>
