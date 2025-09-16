@@ -22,11 +22,11 @@ export const Header: React.FC = () => {
 
   const handleSyncBalance = async () => {
     try {
-      console.log('🔄 Forçando sincronização do saldo...');
+      console.log('🔄 Forcing balance synchronization...');
       const balance = await syncWalletBalance();
-      console.log('✅ Sincronização concluída:', balance);
+      console.log('✅ Synchronization completed:', balance);
     } catch (error) {
-      console.error('❌ Erro na sincronização:', error);
+      console.error('❌ Synchronization error:', error);
     }
   };
 
@@ -35,8 +35,8 @@ export const Header: React.FC = () => {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      // Mesmo com erro, redireciona para login
+      console.error('Logout error:', error);
+      // Even with error, redirect to login
       navigate('/login');
     }
   };

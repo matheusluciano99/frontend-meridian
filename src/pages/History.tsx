@@ -53,8 +53,8 @@ const History: React.FC = () => {
       } catch (error) {
         console.error(error);
         toast({
-          title: 'Erro ao carregar histórico',
-          description: 'Não foi possível carregar o histórico de apólices e transações.',
+          title: 'Error loading history',
+          description: 'Could not load the history of policies and transactions.',
           variant: 'destructive'
         });
       } finally {
@@ -117,28 +117,28 @@ const History: React.FC = () => {
         return (
           <Badge variant="secondary" className="bg-success/20 text-success">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Ativa
+            Active
           </Badge>
         );
       case 'PAUSED':
         return (
           <Badge variant="secondary" className="bg-warning/20 text-warning">
             <Pause className="w-3 h-3 mr-1" />
-            Pausada
+            Paused
           </Badge>
         );
       case 'EXPIRED':
         return (
           <Badge variant="secondary" className="bg-destructive/20 text-destructive">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Expirada
+            Expired
           </Badge>
         );
       case 'CANCELLED':
         return (
           <Badge variant="secondary" className="bg-muted/20 text-muted-foreground">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Cancelada
+            Cancelled
           </Badge>
         );
       default:
@@ -175,8 +175,8 @@ const History: React.FC = () => {
     try {
       await PoliciesService.pause(policyId);
       toast({
-        title: "Apólice pausada",
-        description: "A apólice foi pausada com sucesso.",
+        title: "Policy paused",
+        description: "The policy has been paused successfully.",
       });
       // Recarregar dados
       if (user?.id) {
@@ -186,8 +186,8 @@ const History: React.FC = () => {
       }
     } catch (error) {
       toast({
-        title: "Erro ao pausar apólice",
-        description: "Não foi possível pausar a apólice.",
+        title: "Error pausing policy",
+        description: "Could not pause the policy.",
         variant: "destructive"
       });
     }
@@ -197,8 +197,8 @@ const History: React.FC = () => {
     try {
       await PoliciesService.activate(policyId);
       toast({
-        title: "Apólice ativada",
-        description: "A apólice foi ativada com sucesso.",
+        title: "Policy activated",
+        description: "The policy has been activated successfully.",
       });
       // Recarregar dados
       if (user?.id) {
@@ -208,8 +208,8 @@ const History: React.FC = () => {
       }
     } catch (error) {
       toast({
-        title: "Erro ao ativar apólice",
-        description: "Não foi possível ativar a apólice.",
+        title: "Error activating policy",
+        description: "Could not activate the policy.",
         variant: "destructive"
       });
     }
@@ -259,14 +259,14 @@ const History: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Histórico</h1>
+            <h1 className="text-3xl font-bold mb-2">History</h1>
             <p className="text-muted-foreground">
-              Gerencie suas apólices e acompanhe transações
+              Manage your policies and track transactions
             </p>
           </div>
           <Button onClick={handleExportPDF} variant="outline">
             <Download className="w-4 h-4 mr-2" />
-            Exportar PDF
+            Export PDF
           </Button>
         </div>
 
@@ -279,7 +279,7 @@ const History: React.FC = () => {
             className="flex items-center gap-2"
           >
             <Shield className="w-4 h-4" />
-            Apólices ({totalPolicies})
+            Policies ({totalPolicies})
           </Button>
           <Button
             variant={activeTab === 'transactions' ? 'default' : 'ghost'}
@@ -288,7 +288,7 @@ const History: React.FC = () => {
             className="flex items-center gap-2"
           >
             <FileText className="w-4 h-4" />
-            Transações ({events.length})
+            Transactions ({events.length})
           </Button>
         </div>
 
@@ -300,7 +300,7 @@ const History: React.FC = () => {
                 <CardContent className="p-6 text-center">
                   <DollarSign className="w-8 h-8 text-primary mx-auto mb-2" />
                   <div className="text-2xl font-bold">R$ {totalSpent.toFixed(2)}</div>
-                  <p className="text-muted-foreground">Total Gasto</p>
+                  <p className="text-muted-foreground">Total Spent</p>
                 </CardContent>
               </Card>
               
@@ -308,7 +308,7 @@ const History: React.FC = () => {
                 <CardContent className="p-6 text-center">
                   <Shield className="w-8 h-8 text-success mx-auto mb-2" />
                   <div className="text-2xl font-bold">{activePolicies}</div>
-                  <p className="text-muted-foreground">Apólices Ativas</p>
+                  <p className="text-muted-foreground">Active Policies</p>
                 </CardContent>
               </Card>
               
@@ -316,7 +316,7 @@ const History: React.FC = () => {
                 <CardContent className="p-6 text-center">
                   <CheckCircle className="w-8 h-8 text-success mx-auto mb-2" />
                   <div className="text-2xl font-bold">{totalPolicies}</div>
-                  <p className="text-muted-foreground">Total de Apólices</p>
+                  <p className="text-muted-foreground">Total Policies</p>
                 </CardContent>
               </Card>
             </>
@@ -326,7 +326,7 @@ const History: React.FC = () => {
                 <CardContent className="p-6 text-center">
                   <DollarSign className="w-8 h-8 text-primary mx-auto mb-2" />
                   <div className="text-2xl font-bold">R$ {totalAmount.toFixed(2)}</div>
-                  <p className="text-muted-foreground">Total em Transações</p>
+                  <p className="text-muted-foreground">Total in Transactions</p>
                 </CardContent>
               </Card>
               
@@ -336,7 +336,7 @@ const History: React.FC = () => {
                   <div className="text-2xl font-bold">
                     {events.filter(e => e.type === 'PolicyActivated').length}
                   </div>
-                  <p className="text-muted-foreground">Apólices Ativadas</p>
+                  <p className="text-muted-foreground">Policies Activated</p>
                 </CardContent>
               </Card>
               
@@ -346,7 +346,7 @@ const History: React.FC = () => {
                   <div className="text-2xl font-bold">
                     {events.filter(e => e.status === 'completed').length}
                   </div>
-                  <p className="text-muted-foreground">Transações Concluídas</p>
+                  <p className="text-muted-foreground">Completed Transactions</p>
                 </CardContent>
               </Card>
             </>
@@ -360,8 +360,8 @@ const History: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder={activeTab === 'policies' 
-                  ? "Buscar por número da apólice, produto ou status..."
-                  : "Buscar por descrição, tipo ou ID da apólice..."
+                  ? "Search by policy number, product or status..."
+                  : "Search by description, type or policy ID..."
                 }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -377,20 +377,20 @@ const History: React.FC = () => {
           >
             {activeTab === 'policies' ? (
               <>
-                <option value="all">Todos os status</option>
-                <option value="ACTIVE">Ativas</option>
-                <option value="PAUSED">Pausadas</option>
-                <option value="EXPIRED">Expiradas</option>
-                <option value="CANCELLED">Canceladas</option>
+                <option value="all">All statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="PAUSED">Paused</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="CANCELLED">Cancelled</option>
               </>
             ) : (
               <>
-                <option value="all">Todos os tipos</option>
-                <option value="PolicyActivated">Apólices Ativadas</option>
-                <option value="WEBHOOK_PAYMENT_CONFIRMED">Pagamentos</option>
-                <option value="CHARGE_STARTED">Cobranças</option>
-                <option value="PolicyPaused">Pausadas</option>
-                <option value="PolicyExpired">Expiradas</option>
+                <option value="all">All types</option>
+                <option value="PolicyActivated">Policies Activated</option>
+                <option value="WEBHOOK_PAYMENT_CONFIRMED">Payments</option>
+                <option value="CHARGE_STARTED">Charges</option>
+                <option value="PolicyPaused">Paused</option>
+                <option value="PolicyExpired">Expired</option>
               </>
             )}
           </select>
@@ -400,7 +400,7 @@ const History: React.FC = () => {
         <Card className="glass-card border-border/50">
           <CardHeader>
             <CardTitle>
-              {activeTab === 'policies' ? 'Suas Apólices' : 'Transações Recentes'}
+              {activeTab === 'policies' ? 'Your Policies' : 'Recent Transactions'}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -408,11 +408,11 @@ const History: React.FC = () => {
               filteredPolicies.length === 0 ? (
                 <div className="text-center py-12">
                   <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma apólice encontrada</h3>
+                  <h3 className="text-lg font-medium mb-2">No policies found</h3>
                   <p className="text-muted-foreground">
                     {searchTerm || filterType !== 'all' 
-                      ? 'Tente ajustar os filtros de busca.'
-                      : 'Suas apólices aparecerão aqui.'}
+                      ? 'Try adjusting the search filters.'
+                      : 'Your policies will appear here.'}
                   </p>
                 </div>
               ) : (
@@ -442,7 +442,7 @@ const History: React.FC = () => {
                               
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
-                                {new Date(policy.start_date).toLocaleDateString('pt-BR')} - {new Date(policy.end_date).toLocaleDateString('pt-BR')}
+                                {new Date(policy.start_date).toLocaleDateString('en-US')} - {new Date(policy.end_date).toLocaleDateString('en-US')}
                               </span>
                             </div>
                           </div>
@@ -454,7 +454,7 @@ const History: React.FC = () => {
                               R$ {policy.premium_amount.toFixed(2)}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              Cobertura: R$ {policy.coverage_amount.toFixed(2)}
+                              Coverage: R$ {policy.coverage_amount.toFixed(2)}
                             </div>
                           </div>
                           
@@ -465,7 +465,7 @@ const History: React.FC = () => {
                               onClick={() => handlePausePolicy(policy.id)}
                             >
                               <Pause className="w-4 h-4 mr-1" />
-                              Pausar
+                              Pause
                             </Button>
                           )}
                           
@@ -476,7 +476,7 @@ const History: React.FC = () => {
                               onClick={() => handleActivatePolicy(policy.id)}
                             >
                               <Play className="w-4 h-4 mr-1" />
-                              Ativar
+                              Activer
                             </Button>
                           )}
                         </div>
@@ -489,11 +489,11 @@ const History: React.FC = () => {
               filteredEvents.length === 0 ? (
                 <div className="text-center py-12">
                   <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma transação encontrada</h3>
+                  <h3 className="text-lg font-medium mb-2">No transactions found</h3>
                   <p className="text-muted-foreground">
                     {searchTerm || filterType !== 'all' 
-                      ? 'Tente ajustar os filtros de busca.'
-                      : 'Suas transações aparecerão aqui.'}
+                      ? 'Try adjusting the search filters.'
+                      : 'Your transactions will appear here.'}
                   </p>
                 </div>
               ) : (
@@ -518,7 +518,7 @@ const History: React.FC = () => {
                             
                             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                               <span>
-                                {event.timestamp.toLocaleDateString('pt-BR', {
+                                {event.timestamp.toLocaleDateString('en-US', {
                                   day: '2-digit',
                                   month: '2-digit',
                                   year: 'numeric',
@@ -546,7 +546,7 @@ const History: React.FC = () => {
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1 hover:text-primary"
                                   >
-                                    Ver no Stellar
+                                    View on Stellar
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </Button>

@@ -308,7 +308,7 @@ const Products: React.FC = () => {
 
                   <Button asChild variant="outline" size="sm" className="w-full">
                     <Link to={`/product/${product.id}`}>
-                      Ver detalhes
+                      View details
                     </Link>
                   </Button>
                 </CardContent>
@@ -498,7 +498,7 @@ const Products: React.FC = () => {
                       <span className="font-medium">{product.duration}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Cobertura</span>
+                      <span className="text-muted-foreground">Coverage</span>
                       <span className="font-medium text-success">{product.coverage}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -553,7 +553,7 @@ const Products: React.FC = () => {
                   setSortBy('recommended');
                 }}
               >
-                Limpar filtros
+                Clear filters
               </Button>
             </div>
           )}

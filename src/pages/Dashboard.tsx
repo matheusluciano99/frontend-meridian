@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
     if (!user) return;
     const value = parseFloat(depositAmount);
     if (isNaN(value) || value <= 0) {
-      toast({ title: 'Valor inválido', variant: 'destructive' });
+      toast({ title: 'Invalid amount', variant: 'destructive' });
       return;
     }
     setWalletLoading(true);
@@ -79,10 +79,10 @@ const Dashboard: React.FC = () => {
         // Redirecionar para a URL da âncora para completar o pagamento
         window.location.href = result.interactiveUrl;
       } else {
-        toast({ title: 'Erro', description: 'URL de depósito não recebida', variant: 'destructive' });
+        toast({ title: 'Error', description: 'Deposit URL not received', variant: 'destructive' });
       }
     } catch (err:any) {
-      toast({ title: 'Erro no depósito', description: err.message, variant: 'destructive' });
+      toast({ title: 'Deposit error', description: err.message, variant: 'destructive' });
     } finally {
       setWalletLoading(false);
       setDepositAmount('');
@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
 
               <Card className="glass-card border-border/50 md:col-span-2">
                 <CardHeader className="pb-3">
-                  <CardTitle>Novo Depósito</CardTitle>
+                  <CardTitle>New Deposit</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleDeposit} className="flex flex-col md:flex-row gap-4 items-start md:items-end">
@@ -239,8 +239,8 @@ const Dashboard: React.FC = () => {
                       <label className="text-sm mb-1 block">Amount (XLM)</label>
                       <Input value={depositAmount} onChange={e => setDepositAmount(e.target.value)} placeholder="100.00" />
                     </div>
-                    <Button type="submit" disabled={walletLoading}>{walletLoading ? 'Enviando...' : 'Depositar'}</Button>
-                    <Button type="button" variant="outline" onClick={async ()=>{ await AnchorsService.reconcile(); refreshAnchor(); }}>Reconciliar</Button>
+                    <Button type="submit" disabled={walletLoading}>{walletLoading ? 'Sending...' : 'Deposit'}</Button>
+                    <Button type="button" variant="outline" onClick={async ()=>{ await AnchorsService.reconcile(); refreshAnchor(); }}>Reconcile</Button>
                   </form>
                 </CardContent>
               </Card>
@@ -257,16 +257,16 @@ const Dashboard: React.FC = () => {
                     <thead>
                       <tr className="text-left text-muted-foreground border-b border-border/40">
                         <th className="py-2 pr-4">ID</th>
-                        <th className="py-2 pr-4">Tipo</th>
+                        <th className="py-2 pr-4">Type</th>
                         <th className="py-2 pr-4">Amount (XLM)</th>
                         <th className="py-2 pr-4">Status</th>
                         <th className="py-2 pr-4">On-chain</th>
-                        <th className="py-2 pr-4">Criado</th>
+                        <th className="py-2 pr-4">Created</th>
                       </tr>
                     </thead>
                     <tbody>
                       {anchorTxs.length === 0 && (
-                        <tr><td colSpan={6} className="py-4 text-center text-muted-foreground">Nenhuma transação</td></tr>
+                        <tr><td colSpan={6} className="py-4 text-center text-muted-foreground">No transactions</td></tr>
                       )}
                       {anchorTxs.map(tx => (
                         <tr key={tx.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
@@ -354,9 +354,9 @@ const Dashboard: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All prices</SelectItem>
-                  <SelectItem value="low">Up to R$ 3.00</SelectItem>
-                  <SelectItem value="medium">R$ 3.00 - R$ 7.00</SelectItem>
-                  <SelectItem value="high">Above R$ 7.00</SelectItem>
+                  <SelectItem value="low">Up to $3.00</SelectItem>
+                  <SelectItem value="medium">$3.00 - $7.00</SelectItem>
+                  <SelectItem value="high">Above $7.00</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -485,7 +485,7 @@ const Dashboard: React.FC = () => {
                   setPriceFilter('all');
                 }}
               >
-                Limpar filtros
+                Clear filters
               </Button>
             </div>
           )}
