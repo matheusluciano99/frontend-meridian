@@ -61,8 +61,8 @@ const Coverage: React.FC = () => {
         setFilteredCoverages(coveragesData);
       } catch (error) {
         toast({
-          title: "Erro ao carregar coberturas",
-          description: "Não foi possível carregar informações das coberturas.",
+          title: "Error loading coverages",
+          description: "Could not load coverage information.",
           variant: "destructive"
         });
       } finally {
@@ -114,13 +114,13 @@ const Coverage: React.FC = () => {
       ));
 
       toast({
-        title: "Cobertura pausada",
-        description: "Sua cobertura foi pausada com sucesso.",
+        title: "Coverage paused",
+        description: "Your coverage has been paused successfully.",
       });
     } catch (error) {
       toast({
-        title: "Erro ao pausar cobertura",
-        description: "Não foi possível pausar a cobertura.",
+        title: "Error pausing coverage",
+        description: "Could not pause the coverage.",
         variant: "destructive"
       });
     } finally {
@@ -140,13 +140,13 @@ const Coverage: React.FC = () => {
       ));
 
       toast({
-        title: "Cobertura reativada",
-        description: "Sua cobertura foi reativada com sucesso.",
+        title: "Coverage resumed",
+        description: "Your coverage has been resumed successfully.",
       });
     } catch (error) {
       toast({
-        title: "Erro ao reativar cobertura",
-        description: "Não foi possível reativar a cobertura.",
+        title: "Error resuming coverage",
+        description: "Could not resume the coverage.",
         variant: "destructive"
       });
     } finally {
@@ -160,7 +160,7 @@ const Coverage: React.FC = () => {
     const remaining = end - now;
 
     if (remaining <= 0) {
-      return 'Expirado';
+      return 'Expired';
     }
 
     const hours = Math.floor(remaining / (1000 * 60 * 60));
@@ -187,28 +187,28 @@ const Coverage: React.FC = () => {
         return (
           <Badge variant="secondary" className="bg-success text-success-foreground">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Ativo
+            Active
           </Badge>
         );
       case 'PAUSED':
         return (
           <Badge variant="secondary" className="bg-warning text-warning-foreground">
             <Pause className="w-3 h-3 mr-1" />
-            Pausado
+            Paused
           </Badge>
         );
       case 'EXPIRED':
         return (
           <Badge variant="secondary" className="bg-destructive text-destructive-foreground">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Expirado
+            Expired
           </Badge>
         );
       case 'CANCELLED':
         return (
           <Badge variant="secondary" className="bg-muted text-muted-foreground">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Cancelado
+            Cancelled
           </Badge>
         );
       default:
@@ -239,12 +239,12 @@ const Coverage: React.FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Nenhuma Cobertura</h2>
+            <h2 className="text-2xl font-bold mb-2">No Coverage</h2>
             <p className="text-muted-foreground mb-6">
-              Você não possui nenhuma cobertura no momento.
+              You don't have any coverage at the moment.
             </p>
             <Button asChild>
-              <Link to="/">Ver Produtos Disponíveis</Link>
+              <Link to="/">View Available Products</Link>
             </Button>
           </div>
         </div>
@@ -259,15 +259,15 @@ const Coverage: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Minhas Coberturas</h1>
+              <h1 className="text-3xl font-bold mb-2">My Coverage</h1>
               <p className="text-muted-foreground">
-                Monitore suas proteções em tempo real
+                Monitor your protections in real time
               </p>
             </div>
             <Button asChild>
               <Link to="/">
                 <Plus className="w-4 h-4 mr-2" />
-                Nova Cobertura
+                New Coverage
               </Link>
             </Button>
           </div>
@@ -279,7 +279,7 @@ const Coverage: React.FC = () => {
                 <div className="text-2xl font-bold text-success mb-1">
                   {coverages.filter(c => c.status === 'ACTIVE').length}
                 </div>
-                <p className="text-sm text-muted-foreground">Ativas</p>
+                <p className="text-sm text-muted-foreground">Active</p>
               </CardContent>
             </Card>
             <Card className="glass-card border-border/50">
@@ -287,7 +287,7 @@ const Coverage: React.FC = () => {
                 <div className="text-2xl font-bold text-warning mb-1">
                   {coverages.filter(c => c.status === 'PAUSED').length}
                 </div>
-                <p className="text-sm text-muted-foreground">Pausadas</p>
+                <p className="text-sm text-muted-foreground">Paused</p>
               </CardContent>
             </Card>
             <Card className="glass-card border-border/50">
@@ -295,7 +295,7 @@ const Coverage: React.FC = () => {
                 <div className="text-2xl font-bold text-primary mb-1">
                   R$ {coverages.reduce((sum, c) => sum + c.accumulatedCost, 0).toFixed(2)}
                 </div>
-                <p className="text-sm text-muted-foreground">Total Gasto</p>
+                <p className="text-sm text-muted-foreground">Total Spent</p>
               </CardContent>
             </Card>
           </div>
@@ -308,7 +308,7 @@ const Coverage: React.FC = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Buscar coberturas..."
+                    placeholder="Search coverages..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -323,10 +323,10 @@ const Coverage: React.FC = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="ACTIVE">Ativas</SelectItem>
-                  <SelectItem value="PAUSED">Pausadas</SelectItem>
-                  <SelectItem value="EXPIRED">Expiradas</SelectItem>
+                  <SelectItem value="all">All status</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="PAUSED">Paused</SelectItem>
+                  <SelectItem value="EXPIRED">Expired</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -334,15 +334,15 @@ const Coverage: React.FC = () => {
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-full md:w-48">
                   <Shield className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Categoria" />
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  <SelectItem value="acidentes">Acidentes</SelectItem>
-                  <SelectItem value="viagem">Viagem</SelectItem>
-                  <SelectItem value="saude">Saúde</SelectItem>
-                  <SelectItem value="esporte">Esporte</SelectItem>
-                  <SelectItem value="residencial">Residencial</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="acidentes">Accidents</SelectItem>
+                  <SelectItem value="viagem">Travel</SelectItem>
+                  <SelectItem value="saude">Health</SelectItem>
+                  <SelectItem value="esporte">Sports</SelectItem>
+                  <SelectItem value="residencial">Residential</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -350,7 +350,7 @@ const Coverage: React.FC = () => {
             {/* Results count */}
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
-                {filteredCoverages.length} cobertura{filteredCoverages.length !== 1 ? 's' : ''} encontrada{filteredCoverages.length !== 1 ? 's' : ''}
+                {filteredCoverages.length} coverage{filteredCoverages.length !== 1 ? 's' : ''} found
               </p>
               {(searchTerm || statusFilter !== 'all' || categoryFilter !== 'all') && (
                 <Button
@@ -362,7 +362,7 @@ const Coverage: React.FC = () => {
                     setCategoryFilter('all');
                   }}
                 >
-                  Limpar filtros
+                  Clear filters
                 </Button>
               )}
             </div>
@@ -392,7 +392,7 @@ const Coverage: React.FC = () => {
                     <div className="text-2xl font-mono font-bold text-gradient-primary mb-2">
                       {getTimeRemaining(coverage)}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">Tempo restante</p>
+                    <p className="text-sm text-muted-foreground mb-3">Time remaining</p>
                     <Progress value={getProgressPercentage(coverage)} className="h-2" />
                   </div>
                 )}
@@ -402,14 +402,14 @@ const Coverage: React.FC = () => {
                   <div className="text-center p-3 bg-muted/30 rounded-lg">
                     <DollarSign className="w-4 h-4 text-primary mx-auto mb-1" />
                     <div className="font-bold text-sm">{coverage.coverage}</div>
-                    <div className="text-xs text-muted-foreground">Cobertura</div>
+                    <div className="text-xs text-muted-foreground">Coverage</div>
                   </div>
                   <div className="text-center p-3 bg-muted/30 rounded-lg">
                     <TrendingUp className="w-4 h-4 text-secondary mx-auto mb-1" />
                     <div className="font-bold text-sm">
                       R$ {coverage.accumulatedCost.toFixed(2)}
                     </div>
-                    <div className="text-xs text-muted-foreground">Gasto</div>
+                    <div className="text-xs text-muted-foreground">Spent</div>
                   </div>
                 </div>
 
@@ -417,12 +417,12 @@ const Coverage: React.FC = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Início:</span>
+                    <span className="text-muted-foreground">Start:</span>
                     <span>{coverage.startTime.toLocaleDateString('pt-BR')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Término:</span>
+                    <span className="text-muted-foreground">End:</span>
                     <span>{coverage.endTime.toLocaleDateString('pt-BR')}</span>
                   </div>
                 </div>
@@ -438,11 +438,11 @@ const Coverage: React.FC = () => {
                       size="sm"
                     >
                       {pauseLoading === coverage.id ? (
-                        "Pausando..."
+                        "Pausing..."
                       ) : (
                         <>
                           <Pause className="w-3 h-3 mr-2" />
-                          Pausar
+                          Pause
                         </>
                       )}
                     </Button>
@@ -457,11 +457,11 @@ const Coverage: React.FC = () => {
                       size="sm"
                     >
                       {pauseLoading === coverage.id ? (
-                        "Reativando..."
+                        "Resuming..."
                       ) : (
                         <>
                           <Play className="w-3 h-3 mr-2" />
-                          Reativar
+                          Resume
                         </>
                       )}
                     </Button>
@@ -479,7 +479,7 @@ const Coverage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2"
                     >
-                      Ver Transação
+                      View Transaction
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </Button>
@@ -493,9 +493,9 @@ const Coverage: React.FC = () => {
         {filteredCoverages.length === 0 && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Nenhuma cobertura encontrada</h3>
+            <h3 className="text-xl font-semibold mb-2">No coverage found</h3>
             <p className="text-muted-foreground mb-6">
-              Tente ajustar os filtros ou termo de busca para encontrar o que procura.
+              Try adjusting the filters or search term to find what you're looking for.
             </p>
             <Button
               variant="outline"

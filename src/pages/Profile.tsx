@@ -132,39 +132,39 @@ const Profile: React.FC = () => {
     fetchActivities();
   }, []);
 
-  // Efeito para atualizar dados da carteira quando a aba "wallet" for aberta
+  // Effect to update wallet data when "wallet" tab is opened
   useEffect(() => {
     if (activeTab === 'wallet') {
-      console.log('💳 Aba carteira aberta - atualizando dados...');
+      console.log('💳 Wallet tab opened - updating data...');
       refreshWalletData();
     }
   }, [activeTab]);
 
-  // Função para atualizar todos os dados da carteira
+  // Function to update all wallet data
   const refreshWalletData = async () => {
     if (wallet) {
       setRefreshingWallet(true);
       try {
-        console.log('🔄 Atualizando dados da carteira...');
+        console.log('🔄 Updating wallet data...');
         
-        // Atualizar saldo
+        // Update balance
         await getBalance();
         
-        // Verificar status da conta
-        // Note: As funções checkAccountActivation e requestTestnetFunds 
-        // serão chamadas pelos botões específicos quando necessário
+        // Check account status
+        // Note: The checkAccountActivation and requestTestnetFunds functions 
+        // will be called by specific buttons when needed
         
-        console.log('✅ Dados da carteira atualizados');
+        console.log('✅ Wallet data updated');
         
         toast({
-          title: "Dados atualizados",
-          description: "Informações da carteira foram atualizadas com sucesso.",
+          title: "Data updated",
+          description: "Wallet information has been updated successfully.",
         });
       } catch (error) {
-        console.error('❌ Erro ao atualizar dados da carteira:', error);
+        console.error('❌ Error updating wallet data:', error);
         toast({
-          title: "Erro ao atualizar",
-          description: "Não foi possível atualizar os dados da carteira.",
+          title: "Error updating",
+          description: "Could not update wallet data.",
           variant: "destructive"
         });
       } finally {
@@ -186,7 +186,7 @@ const Profile: React.FC = () => {
         document: '123.456.789-00',
         kycStatus: 'pending',
         kycDocumentUrl: undefined,
-        // Informações extras mockadas
+        // Mocked extra information
         birthDate: '1990-05-15',
         age: 34,
         occupation: 'Engenheiro de Software',
@@ -215,7 +215,7 @@ const Profile: React.FC = () => {
         email: mockProfile.email,
         phone: mockProfile.phone || '',
         document: mockProfile.document || '',
-        // Informações extras
+        // Extra information
         birthDate: mockProfile.birthDate || '',
         occupation: mockProfile.occupation || '',
         monthlyIncome: mockProfile.monthlyIncome?.toString() || '',
@@ -236,8 +236,8 @@ const Profile: React.FC = () => {
       });
     } catch (error) {
       toast({
-        title: "Erro ao carregar perfil",
-        description: "Não foi possível carregar os dados do perfil.",
+        title: "Error loading profile",
+        description: "Could not load profile data.",
         variant: "destructive"
       });
     } finally {
@@ -251,36 +251,36 @@ const Profile: React.FC = () => {
       const mockActivities: ActivityLog[] = [
         {
           id: '1',
-          action: 'Login realizado',
-          description: 'Acesso ao sistema via email',
+          action: 'Login performed',
+          description: 'System access via email',
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
           type: 'login'
         },
         {
           id: '2',
-          action: 'Apólice ativada',
-          description: 'Acidentes 48h - R$ 3,00',
+          action: 'Policy activated',
+          description: 'Accidents 48h - R$ 3.00',
           timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
           type: 'policy'
         },
         {
           id: '3',
-          action: 'Pagamento confirmado',
-          description: 'PIX - R$ 3,00',
+          action: 'Payment confirmed',
+          description: 'PIX - R$ 3.00',
           timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
           type: 'payment'
         },
         {
           id: '4',
-          action: 'Documento enviado',
-          description: 'RG para verificação KYC',
+          action: 'Document sent',
+          description: 'ID for KYC verification',
           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
           type: 'kyc'
         },
         {
           id: '5',
-          action: 'Perfil atualizado',
-          description: 'Telefone alterado',
+          action: 'Profile updated',
+          description: 'Phone changed',
           timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
           type: 'profile'
         }
@@ -288,7 +288,7 @@ const Profile: React.FC = () => {
       
       setActivities(mockActivities);
     } catch (error) {
-      console.error('Erro ao carregar atividades:', error);
+      console.error('Error loading activities:', error);
     }
   };
 
@@ -308,13 +308,13 @@ const Profile: React.FC = () => {
       setEditing(false);
       setEditingExtra(false);
       toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
+        title: "Profile updated",
+        description: "Your information has been saved successfully.",
       });
     } catch (error) {
       toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível atualizar o perfil.",
+        title: "Error saving",
+        description: "Could not update the profile.",
         variant: "destructive"
       });
     } finally {
@@ -329,7 +329,7 @@ const Profile: React.FC = () => {
         email: profile.email,
         phone: profile.phone || '',
         document: profile.document || '',
-        // Informações extras
+        // Extra information
         birthDate: profile.birthDate || '',
         occupation: profile.occupation || '',
         monthlyIncome: profile.monthlyIncome?.toString() || '',
@@ -359,7 +359,7 @@ const Profile: React.FC = () => {
         email: profile.email,
         phone: profile.phone || '',
         document: profile.document || '',
-        // Informações extras
+        // Extra information
         birthDate: profile.birthDate || '',
         occupation: profile.occupation || '',
         monthlyIncome: profile.monthlyIncome?.toString() || '',
@@ -398,13 +398,13 @@ const Profile: React.FC = () => {
       } : null);
       
       toast({
-        title: "Documento enviado",
-        description: "Seu documento foi enviado para verificação.",
+        title: "Document sent",
+        description: "Your document has been sent for verification.",
       });
     } catch (error) {
       toast({
-        title: "Erro no upload",
-        description: "Não foi possível enviar o documento.",
+        title: "Upload error",
+        description: "Could not send the document.",
         variant: "destructive"
       });
     } finally {
@@ -416,14 +416,14 @@ const Profile: React.FC = () => {
     try {
       await connectWallet();
       toast({
-        title: "Carteira conectada",
-        description: "Sua carteira Freighter foi conectada com sucesso!",
+        title: "Wallet connected",
+        description: "Your Freighter wallet has been connected successfully!",
       });
     } catch (error) {
-      console.error('Erro ao conectar carteira:', error);
+      console.error('Error connecting wallet:', error);
       toast({
-        title: "Erro ao conectar carteira",
-        description: "Não foi possível conectar à carteira Freighter. Verifique se a extensão está instalada.",
+        title: "Error connecting wallet",
+        description: "Could not connect to Freighter wallet. Please check if the extension is installed.",
         variant: "destructive"
       });
     }
@@ -432,8 +432,8 @@ const Profile: React.FC = () => {
   const handleDisconnectWallet = () => {
     disconnectWallet();
     toast({
-      title: "Carteira desconectada",
-      description: "Sua carteira foi desconectada com sucesso.",
+      title: "Wallet disconnected",
+      description: "Your wallet has been disconnected successfully.",
     });
   };
 
@@ -442,13 +442,13 @@ const Profile: React.FC = () => {
       try {
         const balance = await getBalance();
         toast({
-          title: "Saldo atualizado",
-          description: `Saldo atual: ${balance.toFixed(2)} XLM`,
+          title: "Balance updated",
+          description: `Current balance: ${balance.toFixed(2)} XLM`,
         });
       } catch (error) {
         toast({
-          title: "Erro ao atualizar saldo",
-          description: "Não foi possível atualizar o saldo da carteira.",
+          title: "Error updating balance",
+          description: "Could not update wallet balance.",
           variant: "destructive"
         });
       }
@@ -461,21 +461,21 @@ const Profile: React.FC = () => {
         return (
           <Badge variant="secondary" className="bg-success text-success-foreground">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Verificado
+            Verified
           </Badge>
         );
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-warning text-warning-foreground">
             <Clock className="w-3 h-3 mr-1" />
-            Pendente
+            Pending
           </Badge>
         );
       case 'rejected':
         return (
           <Badge variant="secondary" className="bg-destructive text-destructive-foreground">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Rejeitado
+            Rejected
           </Badge>
         );
       default:
@@ -526,9 +526,9 @@ const Profile: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Meu Perfil</h1>
+          <h1 className="text-3xl font-bold mb-2">My Profile</h1>
           <p className="text-muted-foreground">
-            Gerencie suas informações pessoais e configurações
+            Manage your personal information and settings
           </p>
         </div>
 
@@ -544,10 +544,10 @@ const Profile: React.FC = () => {
               }}
             >
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="personal">Informações Básicas</TabsTrigger>
-                <TabsTrigger value="extra">Informações Pessoais</TabsTrigger>
-                <TabsTrigger value="kyc">Verificação</TabsTrigger>
-                <TabsTrigger value="wallet">Carteira</TabsTrigger>
+                <TabsTrigger value="personal">Basic Information</TabsTrigger>
+                <TabsTrigger value="extra">Personal Information</TabsTrigger>
+                <TabsTrigger value="kyc">Verification</TabsTrigger>
+                <TabsTrigger value="wallet">Wallet</TabsTrigger>
               </TabsList>
 
               {/* Basic Information */}
@@ -558,10 +558,10 @@ const Profile: React.FC = () => {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <User className="w-5 h-5" />
-                          Informações Básicas
+                          Basic Information
                         </CardTitle>
                         <CardDescription>
-                          Dados básicos de identificação e contato
+                          Basic identification and contact data
                         </CardDescription>
                       </div>
                       {!editing ? (
@@ -571,7 +571,7 @@ const Profile: React.FC = () => {
                           onClick={() => setEditing(true)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Editar
+                          Edit
                         </Button>
                       ) : (
                         <div className="flex gap-2">
@@ -581,7 +581,7 @@ const Profile: React.FC = () => {
                             onClick={handleCancel}
                           >
                             <X className="w-4 h-4 mr-2" />
-                            Cancelar
+                            Cancel
                           </Button>
                           <Button
                             size="sm"
@@ -589,7 +589,7 @@ const Profile: React.FC = () => {
                             disabled={saving}
                           >
                             <Save className="w-4 h-4 mr-2" />
-                            {saving ? 'Salvando...' : 'Salvar'}
+                            {saving ? 'Saving...' : 'Save'}
                           </Button>
                         </div>
                       )}
@@ -598,7 +598,7 @@ const Profile: React.FC = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
+                        <Label htmlFor="name">Full Name</Label>
                         <Input
                           id="name"
                           value={formData.name}
@@ -617,7 +617,7 @@ const Profile: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Telefone</Label>
+                        <Label htmlFor="phone">Phone</Label>
                         <Input
                           id="phone"
                           type="tel"
@@ -650,10 +650,10 @@ const Profile: React.FC = () => {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <FileSearch className="w-5 h-5" />
-                          Informações Pessoais
+                          Personal Information
                         </CardTitle>
                         <CardDescription>
-                          Dados pessoais detalhados para avaliação de risco em seguros
+                          Detailed personal data for insurance risk assessment
                         </CardDescription>
                       </div>
                       {!editingExtra ? (
@@ -663,7 +663,7 @@ const Profile: React.FC = () => {
                           onClick={() => setEditingExtra(true)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Editar
+                          Edit
                         </Button>
                       ) : (
                         <div className="flex gap-2">
@@ -673,7 +673,7 @@ const Profile: React.FC = () => {
                             onClick={handleCancelExtra}
                           >
                             <X className="w-4 h-4 mr-2" />
-                            Cancelar
+                            Cancel
                           </Button>
                           <Button
                             size="sm"
@@ -681,22 +681,22 @@ const Profile: React.FC = () => {
                             disabled={saving}
                           >
                             <Save className="w-4 h-4 mr-2" />
-                            {saving ? 'Salvando...' : 'Salvar'}
+                            {saving ? 'Saving...' : 'Save'}
                           </Button>
                         </div>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Informações Demográficas */}
+                    {/* Demographic Information */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-primary" />
-                        Informações Demográficas
+                        Demographic Information
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="birthDate">Data de Nascimento</Label>
+                          <Label htmlFor="birthDate">Birth Date</Label>
                           <Input
                             id="birthDate"
                             type="date"
@@ -706,7 +706,7 @@ const Profile: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="maritalStatus">Estado Civil</Label>
+                          <Label htmlFor="maritalStatus">Marital Status</Label>
                           <select
                             id="maritalStatus"
                             value={formData.maritalStatus}
@@ -714,14 +714,14 @@ const Profile: React.FC = () => {
                             disabled={!editingExtra}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="single">Solteiro(a)</option>
-                            <option value="married">Casado(a)</option>
-                            <option value="divorced">Divorciado(a)</option>
-                            <option value="widowed">Viúvo(a)</option>
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="divorced">Divorced</option>
+                            <option value="widowed">Widowed</option>
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="dependents">Número de Dependentes</Label>
+                          <Label htmlFor="dependents">Number of Dependents</Label>
                           <Input
                             id="dependents"
                             type="number"
@@ -732,7 +732,7 @@ const Profile: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="education">Escolaridade</Label>
+                          <Label htmlFor="education">Education</Label>
                           <select
                             id="education"
                             value={formData.education}
@@ -740,35 +740,35 @@ const Profile: React.FC = () => {
                             disabled={!editingExtra}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="elementary">Ensino Fundamental</option>
-                            <option value="high_school">Ensino Médio</option>
-                            <option value="college">Ensino Superior</option>
-                            <option value="graduate">Pós-graduação</option>
-                            <option value="postgraduate">Mestrado/Doutorado</option>
+                            <option value="elementary">Elementary School</option>
+                            <option value="high_school">High School</option>
+                            <option value="college">College</option>
+                            <option value="graduate">Graduate</option>
+                            <option value="postgraduate">Master's/PhD</option>
                           </select>
                         </div>
                       </div>
                     </div>
 
-                    {/* Informações Profissionais e Financeiras */}
+                    {/* Professional and Financial Information */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Briefcase className="w-5 h-5 text-primary" />
-                        Informações Profissionais e Financeiras
+                        Professional and Financial Information
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="occupation">Profissão/Ocupação</Label>
+                          <Label htmlFor="occupation">Profession/Occupation</Label>
                           <Input
                             id="occupation"
                             value={formData.occupation}
                             onChange={(e) => setFormData(prev => ({ ...prev, occupation: e.target.value }))}
                             disabled={!editingExtra}
-                            placeholder="Ex: Engenheiro, Médico, Vendedor..."
+                            placeholder="Ex: Engineer, Doctor, Salesperson..."
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="monthlyIncome">Renda Mensal (R$)</Label>
+                          <Label htmlFor="monthlyIncome">Monthly Income (R$)</Label>
                           <Input
                             id="monthlyIncome"
                             type="number"
@@ -781,25 +781,25 @@ const Profile: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Endereço */}
+                    {/* Address */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <MapPin className="w-5 h-5 text-primary" />
-                        Endereço
+                        Address
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2 space-y-2">
-                          <Label htmlFor="address">Endereço Completo</Label>
+                          <Label htmlFor="address">Full Address</Label>
                           <Input
                             id="address"
                             value={formData.address}
                             onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                             disabled={!editingExtra}
-                            placeholder="Rua, número, complemento..."
+                            placeholder="Street, number, complement..."
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="city">Cidade</Label>
+                          <Label htmlFor="city">City</Label>
                           <Input
                             id="city"
                             value={formData.city}
@@ -808,7 +808,7 @@ const Profile: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="state">Estado</Label>
+                          <Label htmlFor="state">State</Label>
                           <Input
                             id="state"
                             value={formData.state}
@@ -818,7 +818,7 @@ const Profile: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="zipCode">CEP</Label>
+                          <Label htmlFor="zipCode">ZIP Code</Label>
                           <Input
                             id="zipCode"
                             value={formData.zipCode}
@@ -830,11 +830,11 @@ const Profile: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Informações de Saúde */}
+                    {/* Health Information */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Heart className="w-5 h-5 text-primary" />
-                        Informações de Saúde
+                        Health Information
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -846,11 +846,11 @@ const Profile: React.FC = () => {
                               disabled={!editingExtra}
                               className="rounded border-input"
                             />
-                            Fumante
+                            Smoker
                           </Label>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="preExistingConditions">Condições Pré-existentes</Label>
+                          <Label htmlFor="preExistingConditions">Pre-existing Conditions</Label>
                           <Input
                             id="preExistingConditions"
                             value={formData.preExistingConditions.join(', ')}
@@ -859,17 +859,17 @@ const Profile: React.FC = () => {
                               preExistingConditions: e.target.value.split(',').map(s => s.trim()).filter(s => s)
                             }))}
                             disabled={!editingExtra}
-                            placeholder="Ex: Diabetes, Hipertensão..."
+                            placeholder="Ex: Diabetes, Hypertension..."
                           />
                         </div>
                       </div>
                     </div>
 
-                    {/* Seguros Atuais */}
+                    {/* Current Insurance */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Shield className="w-5 h-5 text-primary" />
-                        Seguros Atuais
+                        Current Insurance
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="flex items-center space-x-2">
@@ -881,7 +881,7 @@ const Profile: React.FC = () => {
                             disabled={!editingExtra}
                             className="rounded border-input"
                           />
-                          <Label htmlFor="hasHealthInsurance" className="text-sm">Saúde</Label>
+                          <Label htmlFor="hasHealthInsurance" className="text-sm">Health</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input
@@ -892,7 +892,7 @@ const Profile: React.FC = () => {
                             disabled={!editingExtra}
                             className="rounded border-input"
                           />
-                          <Label htmlFor="hasLifeInsurance" className="text-sm">Vida</Label>
+                          <Label htmlFor="hasLifeInsurance" className="text-sm">Life</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input
@@ -914,19 +914,19 @@ const Profile: React.FC = () => {
                             disabled={!editingExtra}
                             className="rounded border-input"
                           />
-                          <Label htmlFor="hasHomeInsurance" className="text-sm">Residencial</Label>
+                          <Label htmlFor="hasHomeInsurance" className="text-sm">Home</Label>
                         </div>
                       </div>
                     </div>
 
-                    {/* Hobbies e Atividades */}
+                    {/* Hobbies and Activities */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Users className="w-5 h-5 text-primary" />
-                        Hobbies e Atividades
+                        Hobbies and Activities
                       </h3>
                       <div className="space-y-2">
-                        <Label htmlFor="hobbies">Hobbies/Atividades (separados por vírgula)</Label>
+                        <Label htmlFor="hobbies">Hobbies/Activities (separated by comma)</Label>
                         <Input
                           id="hobbies"
                           value={formData.hobbies.join(', ')}
@@ -935,7 +935,7 @@ const Profile: React.FC = () => {
                             hobbies: e.target.value.split(',').map(s => s.trim()).filter(s => s)
                           }))}
                            disabled={!editingExtra}
-                          placeholder="Ex: Futebol, Leitura, Viagem, Esportes radicais..."
+                          placeholder="Ex: Football, Reading, Travel, Extreme sports..."
                         />
                       </div>
                     </div>
@@ -949,10 +949,10 @@ const Profile: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="w-5 h-5" />
-                      Verificação de Identidade (KYC)
+                      Identity Verification (KYC)
                     </CardTitle>
                     <CardDescription>
-                      Envie seus documentos para verificação de identidade
+                      Submit your documents for identity verification
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -961,11 +961,11 @@ const Profile: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <Shield className="w-6 h-6 text-primary" />
                         <div>
-                          <p className="font-medium">Status da Verificação</p>
+                          <p className="font-medium">Verification Status</p>
                           <p className="text-sm text-muted-foreground">
-                            {profile.kycStatus === 'verified' && 'Sua identidade foi verificada com sucesso'}
-                            {profile.kycStatus === 'pending' && 'Aguardando análise dos documentos'}
-                            {profile.kycStatus === 'rejected' && 'Documentos rejeitados - envie novamente'}
+                            {profile.kycStatus === 'verified' && 'Your identity has been successfully verified'}
+                            {profile.kycStatus === 'pending' && 'Waiting for document analysis'}
+                            {profile.kycStatus === 'rejected' && 'Documents rejected - please resubmit'}
                           </p>
                         </div>
                       </div>
@@ -974,11 +974,11 @@ const Profile: React.FC = () => {
 
                     {/* Document Upload */}
                     <div className="space-y-4">
-                      <Label>Documento de Identidade</Label>
+                      <Label>Identity Document</Label>
                       <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                         <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                         <p className="text-sm text-muted-foreground mb-2">
-                          Envie uma foto do seu RG, CNH ou Passaporte
+                          Upload a photo of your ID, Driver's License or Passport
                         </p>
                         <input
                           type="file"
@@ -994,7 +994,7 @@ const Profile: React.FC = () => {
                           disabled={uploading}
                         >
                           <label htmlFor="kyc-upload" className="cursor-pointer">
-                            {uploading ? 'Enviando...' : 'Selecionar Arquivo'}
+                            {uploading ? 'Uploading...' : 'Select File'}
                           </label>
                         </Button>
                       </div>
@@ -1003,10 +1003,10 @@ const Profile: React.FC = () => {
                     {/* Document Preview */}
                     {profile.kycDocumentUrl && (
                       <div className="space-y-2">
-                        <Label>Documento Enviado</Label>
+                        <Label>Submitted Document</Label>
                         <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
                           <FileText className="w-5 h-5 text-muted-foreground" />
-                          <span className="flex-1 text-sm">documento_identidade.pdf</span>
+                          <span className="flex-1 text-sm">identity_document.pdf</span>
                           <Button variant="ghost" size="sm">
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -1029,10 +1029,10 @@ const Profile: React.FC = () => {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           <Wallet className="w-5 h-5" />
-                          Carteira Freighter
+                          Freighter Wallet
                         </CardTitle>
                         <CardDescription>
-                          Conecte sua carteira Freighter para pagamentos e recebimentos
+                          Connect your Freighter wallet for payments and receipts
                         </CardDescription>
                       </div>
                       {wallet && (
@@ -1043,7 +1043,7 @@ const Profile: React.FC = () => {
                           disabled={refreshingWallet}
                         >
                           <RefreshCw className={`w-4 h-4 mr-2 ${refreshingWallet ? 'animate-spin' : ''}`} />
-                          {refreshingWallet ? 'Atualizando...' : 'Atualizar'}
+                          {refreshingWallet ? 'Updating...' : 'Update'}
                         </Button>
                       )}
                     </div>
@@ -1052,9 +1052,9 @@ const Profile: React.FC = () => {
                     {!wallet ? (
                       <div className="text-center py-8">
                         <Wallet className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Conectar Carteira Freighter</h3>
+                        <h3 className="text-lg font-semibold mb-2">Connect Freighter Wallet</h3>
                         <p className="text-muted-foreground mb-6">
-                          Conecte sua carteira Freighter para fazer pagamentos e receber sinistros
+                          Connect your Freighter wallet to make payments and receive claims
                         </p>
                         <Button 
                           onClick={handleConnectWallet}
@@ -1063,16 +1063,16 @@ const Profile: React.FC = () => {
                           className="gradient-primary"
                         >
                           <Wallet className="w-5 h-5 mr-2" />
-                          {isConnecting ? 'Conectando...' : 'Conectar Carteira'}
+                          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                         </Button>
                         
                         <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                          <h4 className="font-medium mb-2">Como conectar:</h4>
+                          <h4 className="font-medium mb-2">How to connect:</h4>
                           <ol className="text-sm text-muted-foreground space-y-1 text-left">
-                            <li>1. Instale a extensão Freighter no seu navegador</li>
-                            <li>2. Crie ou importe sua carteira Stellar</li>
-                            <li>3. Clique em "Conectar Carteira" acima</li>
-                            <li>4. Aprove a conexão na extensão</li>
+                            <li>1. Install the Freighter extension in your browser</li>
+                            <li>2. Create or import your Stellar wallet</li>
+                            <li>3. Click "Connect Wallet" above</li>
+                            <li>4. Approve the connection in the extension</li>
                           </ol>
                         </div>
                       </div>
@@ -1084,7 +1084,7 @@ const Profile: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <Wallet className="w-5 h-5 text-green-600" />
                               <span className="font-medium text-green-700 dark:text-green-300">
-                                Carteira Conectada
+                                Wallet Connected
                               </span>
                             </div>
                             <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300">
@@ -1094,7 +1094,7 @@ const Profile: React.FC = () => {
                           
                           <div className="space-y-3">
                             <div>
-                              <Label className="text-sm text-muted-foreground">Endereço da Carteira</Label>
+                              <Label className="text-sm text-muted-foreground">Wallet Address</Label>
                               <div className="flex items-center gap-2 mt-1">
                                 <code className="flex-1 bg-background px-3 py-2 rounded border text-sm font-mono">
                                   {wallet.publicKey}
@@ -1127,7 +1127,7 @@ const Profile: React.FC = () => {
                             className="flex-1"
                           >
                             <RefreshCw className="w-4 h-4 mr-2" />
-                            Atualizar Saldo
+                            Update Balance
                           </Button>
                           <Button 
                             variant="destructive" 
@@ -1135,7 +1135,7 @@ const Profile: React.FC = () => {
                             className="flex-1"
                           >
                             <LogOut className="w-4 h-4 mr-2" />
-                            Desconectar
+                            Disconnect
                           </Button>
                         </div>
                       </div>
@@ -1146,10 +1146,10 @@ const Profile: React.FC = () => {
                       <div className="flex items-start gap-3">
                         <Wallet className="w-5 h-5 text-primary mt-1" />
                         <div>
-                          <h3 className="font-medium text-primary mb-1">Sobre a Carteira Freighter</h3>
+                          <h3 className="font-medium text-primary mb-1">About Freighter Wallet</h3>
                           <p className="text-sm text-muted-foreground">
-                            A Freighter é uma carteira segura para a rede Stellar. Use-a para fazer pagamentos 
-                            de apólices e receber pagamentos de sinistros diretamente na blockchain.
+                            Freighter is a secure wallet for the Stellar network. Use it to make policy 
+                            payments and receive claim payments directly on the blockchain.
                           </p>
                         </div>
                       </div>
@@ -1167,7 +1167,7 @@ const Profile: React.FC = () => {
             {/* Profile Summary */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle>Resumo do Perfil</CardTitle>
+                <CardTitle>Profile Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -1185,11 +1185,11 @@ const Profile: React.FC = () => {
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Membro desde</span>
+                    <span className="text-muted-foreground">Member since</span>
                     <span>{profile.createdAt.toLocaleDateString('pt-BR')}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Status KYC</span>
+                    <span className="text-muted-foreground">KYC Status</span>
                     {getKycStatusBadge(profile.kycStatus)}
                   </div>
                 </div>
@@ -1199,10 +1199,10 @@ const Profile: React.FC = () => {
             {/* Recent Activities */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  Atividades Recentes
-                </CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Recent Activities
+                  </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {activities.slice(0, 5).map((activity) => (

@@ -38,8 +38,8 @@ const History: React.FC = () => {
       } catch (error) {
         console.error(error);
         toast({
-          title: 'Erro ao carregar histórico',
-          description: 'Não foi possível carregar o histórico de transações.',
+          title: 'Error loading history',
+          description: 'Could not load transaction history.',
           variant: 'destructive'
         });
       } finally {
@@ -91,19 +91,19 @@ const History: React.FC = () => {
       case 'completed':
         return (
           <Badge variant="secondary" className="bg-success/20 text-success">
-            Concluído
+            Completed
           </Badge>
         );
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-warning/20 text-warning">
-            Pendente
+            Pending
           </Badge>
         );
       case 'failed':
         return (
           <Badge variant="secondary" className="bg-destructive/20 text-destructive">
-            Falhou
+            Failed
           </Badge>
         );
       default:
@@ -113,8 +113,8 @@ const History: React.FC = () => {
 
   const handleExportPDF = () => {
     toast({
-      title: "Exportando PDF",
-      description: "Seu relatório será gerado em breve...",
+      title: "Exporting PDF",
+      description: "Your report will be generated shortly...",
     });
     // Mock PDF export - replace with actual implementation
   };
@@ -151,14 +151,14 @@ const History: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Histórico de Transações</h1>
+            <h1 className="text-3xl font-bold mb-2">Transaction History</h1>
             <p className="text-muted-foreground">
-              Acompanhe todas as suas atividades e pagamentos
+              Track all your activities and payments
             </p>
           </div>
           <Button onClick={handleExportPDF} variant="outline">
             <Download className="w-4 h-4 mr-2" />
-            Exportar PDF
+            Export PDF
           </Button>
         </div>
 
@@ -168,7 +168,7 @@ const History: React.FC = () => {
             <CardContent className="p-6 text-center">
               <DollarSign className="w-8 h-8 text-primary mx-auto mb-2" />
               <div className="text-2xl font-bold">R$ {totalAmount.toFixed(2)}</div>
-              <p className="text-muted-foreground">Total Gasto</p>
+              <p className="text-muted-foreground">Total Spent</p>
             </CardContent>
           </Card>
           
@@ -178,7 +178,7 @@ const History: React.FC = () => {
               <div className="text-2xl font-bold">
                 {events.filter(e => e.type === 'PolicyActivated').length}
               </div>
-              <p className="text-muted-foreground">Apólices Ativadas</p>
+              <p className="text-muted-foreground">Policies Activated</p>
             </CardContent>
           </Card>
           
@@ -188,7 +188,7 @@ const History: React.FC = () => {
               <div className="text-2xl font-bold">
                 {events.filter(e => e.status === 'completed').length}
               </div>
-              <p className="text-muted-foreground">Transações Concluídas</p>
+              <p className="text-muted-foreground">Completed Transactions</p>
             </CardContent>
           </Card>
         </div>
@@ -199,7 +199,7 @@ const History: React.FC = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Buscar por descrição, tipo ou ID da apólice..."
+                placeholder="Search by description, type or policy ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -212,29 +212,29 @@ const History: React.FC = () => {
             onChange={(e) => setFilterType(e.target.value)}
             className="px-4 py-2 rounded-md border border-border bg-background text-foreground"
           >
-            <option value="all">Todos os tipos</option>
-            <option value="PolicyActivated">Apólices Ativadas</option>
-            <option value="WEBHOOK_PAYMENT_CONFIRMED">Pagamentos</option>
-            <option value="CHARGE_STARTED">Cobranças</option>
-            <option value="PolicyPaused">Pausadas</option>
-            <option value="PolicyExpired">Expiradas</option>
+            <option value="all">All types</option>
+            <option value="PolicyActivated">Policies Activated</option>
+            <option value="WEBHOOK_PAYMENT_CONFIRMED">Payments</option>
+            <option value="CHARGE_STARTED">Charges</option>
+            <option value="PolicyPaused">Paused</option>
+            <option value="PolicyExpired">Expired</option>
           </select>
         </div>
 
         {/* Events List */}
         <Card className="glass-card border-border/50">
           <CardHeader>
-            <CardTitle>Eventos Recentes</CardTitle>
+            <CardTitle>Recent Events</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {filteredEvents.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhum evento encontrado</h3>
+                <h3 className="text-lg font-medium mb-2">No events found</h3>
                 <p className="text-muted-foreground">
                   {searchTerm || filterType !== 'all' 
-                    ? 'Tente ajustar os filtros de busca.'
-                    : 'Suas transações aparecerão aqui.'}
+                    ? 'Try adjusting the search filters.'
+                    : 'Your transactions will appear here.'}
                 </p>
               </div>
             ) : (
@@ -287,7 +287,7 @@ const History: React.FC = () => {
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-1 hover:text-primary"
                                 >
-                                  Ver na Stellar
+                                  View on Stellar
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               </Button>

@@ -10,7 +10,7 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [balanceUpdateInterval, setBalanceUpdateInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Verificar se Freighter está disponível
+  // Check if Freighter is available
   const isFreighterAvailable = async () => {
     if (typeof window === 'undefined') return false;
     
@@ -22,12 +22,12 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Obter a API do Freighter (agora usamos a importação direta)
+  // Get Freighter API (now using direct import)
   const getFreighterApi = () => {
     return FreighterApi;
   };
 
-  // Atualizar saldo e iniciar atualizações automáticas
+  // Update balance and start automatic updates
   const updateBalance = async () => {
     if (!wallet) return;
     
@@ -39,18 +39,18 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Iniciar atualizações automáticas do saldo
+  // Start automatic balance updates
   const startBalanceUpdates = () => {
     if (balanceUpdateInterval) {
       clearInterval(balanceUpdateInterval);
     }
     
-    // Atualizar saldo a cada 30 segundos
+    // Update balance every 30 seconds
     const interval = setInterval(updateBalance, 30000);
     setBalanceUpdateInterval(interval);
   };
 
-  // Parar atualizações automáticas do saldo
+  // Stop automatic balance updates
   const stopBalanceUpdates = () => {
     if (balanceUpdateInterval) {
       clearInterval(balanceUpdateInterval);
@@ -88,29 +88,29 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Conectar carteira
+  // Connect wallet
   const connectWallet = async () => {
     if (!(await isFreighterAvailable())) {
-      throw new Error('Freighter não está instalado ou disponível. Verifique se a extensão está ativa.');
+      throw new Error('Freighter is not installed or available. Please check if the extension is active.');
     }
 
     setIsConnecting(true);
     try {
       const api = getFreighterApi();
       
-      // Verificar se já está conectado
+      // Check if already connected
       const isConnected = await api.isConnected();
       
       if (!isConnected) {
-        // Solicitar permissão para conectar
+        // Request permission to connect
         await api.setAllowed();
       }
       
-      // Obter chave pública
+      // Get public key
       const publicKey = await api.getPublicKey();
       
       if (!publicKey) {
-        throw new Error('Falha ao obter chave pública da carteira');
+        throw new Error('Failed to get wallet public key');
       }
 
       const walletInfo: WalletInfo = {
@@ -124,44 +124,44 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
       // Verificar se a conta precisa ser ativada
       await checkAccountActivation(publicKey, walletInfo.network);
       
-      // Tentar obter saldo e iniciar atualizações automáticas
+      // Try to get balance and start automatic updates
       try {
         const balance = await _getBalanceInternal();
         setWallet(prev => prev ? { ...prev, balance } : null);
         
-        // Iniciar atualizações automáticas do saldo
+        // Start automatic balance updates
         startBalanceUpdates();
       } catch (balanceError) {
-        // Continuar mesmo se não conseguir o saldo
+        // Continue even if balance cannot be obtained
       }
       
     } catch (error) {
-      // Tentar fornecer mensagens de erro mais específicas
+      // Try to provide more specific error messages
       if (error.message.includes('User rejected')) {
-        throw new Error('Conexão rejeitada pelo usuário. Tente novamente e aprove a conexão na extensão.');
+        throw new Error('Connection rejected by user. Try again and approve the connection in the extension.');
       } else if (error.message.includes('Not installed')) {
-        throw new Error('Freighter não está instalado. Instale a extensão e recarregue a página.');
+        throw new Error('Freighter is not installed. Install the extension and reload the page.');
       } else if (error.message.includes('Not connected')) {
-        throw new Error('Freighter não está conectado. Abra a extensão e faça login.');
+        throw new Error('Freighter is not connected. Open the extension and log in.');
       } else {
-        throw new Error(`Erro ao conectar: ${error.message}`);
+        throw new Error(`Connection error: ${error.message}`);
       }
     } finally {
       setIsConnecting(false);
     }
   };
 
-  // Desconectar carteira
+  // Disconnect wallet
   const disconnectWallet = async () => {
     try {
-      // Verificar se a API está disponível
+      // Check if API is available
       if (await isFreighterAvailable()) {
         const api = getFreighterApi();
         
-        // Verificar se está conectado antes de tentar desconectar
+        // Check if connected before trying to disconnect
         const isConnected = await api.isConnected();
         if (isConnected) {
-          // Revogar permissões para forçar novo login
+          // Revoke permissions to force new login
           try {
             await api.setAllowed();
           } catch (setAllowedError) {
@@ -288,7 +288,7 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
                 const balance = await _getBalanceInternal();
                 setWallet(prev => prev ? { ...prev, balance } : null);
                 
-                // Iniciar atualizações automáticas do saldo
+                // Start automatic balance updates
                 startBalanceUpdates();
               } catch (balanceError) {
                 // Erro silencioso

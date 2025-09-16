@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw } from 'lucide-react';
+import { Shield, User, History, LogOut, Settings, Coins, FileText, Wallet, RefreshCw, Package } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { user, logout, syncWalletBalance } = useAuth();
@@ -83,16 +83,16 @@ export const Header: React.FC = () => {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/products" className={getNavLinkClass('/products')}>
-              Produtos
+              Products
             </Link>
             <Link to="/coverage" className={getNavLinkClass('/coverage')}>
-              Cobertura
+              Coverage
             </Link>
             <Link to="/history" className={getNavLinkClass('/history')}>
-              Histórico
+              History
             </Link>
             <Link to="/claims" className={getNavLinkClass('/claims')}>
-              Sinistros
+              Claims
             </Link>
             <Link to="/profile" className={getNavLinkClass('/profile')}>
               Profile
@@ -130,7 +130,7 @@ export const Header: React.FC = () => {
                   <>
                     <Coins className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium text-muted-foreground">
-                      Conecte a carteira
+                      Connect wallet
                     </span>
                   </>
                 )}
@@ -158,27 +158,33 @@ export const Header: React.FC = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link to="/products">
+                      <Package className="mr-2 h-4 w-4" />
+                      Products
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/coverage">
                       <Shield className="mr-2 h-4 w-4" />
-                      Cobertura
+                      Coverage
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/history">
                       <History className="mr-2 h-4 w-4" />
-                      Histórico
+                      History
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/claims">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Claims
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/profile">
                       <User className="mr-2 h-4 w-4" />
                       Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/claims">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Sinistros
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
