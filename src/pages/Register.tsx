@@ -35,17 +35,17 @@ export default function Register() {
 
     // Validações básicas
     if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem');
+      setError('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+      setError('Password must be at least 6 characters');
       return;
     }
 
     if (!formData.name.trim()) {
-      setError('O nome é obrigatório');
+      setError('Name is required');
       return;
     }
 
@@ -58,7 +58,7 @@ export default function Register() {
         navigate('/login');
       }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta');
+      setError(err.message || 'Error creating account');
     } finally {
       setIsLoading(false);
     }
@@ -72,9 +72,9 @@ export default function Register() {
         <div className="relative z-10 w-full max-w-md p-4 pt-8">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-green-600">Conta criada com sucesso!</CardTitle>
+              <CardTitle className="text-2xl text-green-600">Account created successfully!</CardTitle>
               <CardDescription>
-                Verifique seu email para confirmar a conta. Redirecionando para o login...
+                Please check your email to confirm the account. Redirecting to login...
               </CardDescription>
             </CardHeader>
           </Card>
@@ -91,9 +91,9 @@ export default function Register() {
       <div className="relative z-10 w-full max-w-md p-4 pt-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Criar Conta</CardTitle>
+            <CardTitle className="text-2xl text-center">Create Account</CardTitle>
             <CardDescription className="text-center">
-              Preencha os dados abaixo para criar sua conta
+              Fill in the information below to create your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -105,7 +105,7 @@ export default function Register() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
+              <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
                 name="name"
@@ -131,7 +131,7 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 name="password"
@@ -145,7 +145,7 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar senha</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -165,19 +165,19 @@ export default function Register() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
+                  Creating account...
                 </>
               ) : (
-                'Criar Conta'
+                'Create Account'
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Já tem uma conta?{' '}
+              Already have an account?{' '}
               <Link to="/login" className="text-blue-600 hover:underline">
-                Faça login
+                Sign in
               </Link>
             </p>
           </div>

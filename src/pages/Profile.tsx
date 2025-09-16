@@ -176,8 +176,8 @@ const Profile: React.FC = () => {
       
       const mockProfile: UserProfile = {
         id: user?.id || 'user_123',
-        email: user?.email || 'usuario@exemplo.com',
-        name: user?.name || 'João Silva',
+        email: user?.email || 'user@example.com',
+        name: user?.name || 'John Silva',
         phone: '+55 11 99999-9999',
         document: '123.456.789-00',
         kycStatus: 'pending',
@@ -185,9 +185,9 @@ const Profile: React.FC = () => {
         // Mocked extra information
         birthDate: '1990-05-15',
         age: 34,
-        occupation: 'Engenheiro de Software',
+        occupation: 'Software Engineer',
         monthlyIncome: 15000,
-        address: 'Rua das Flores, 123',
+        address: 'Flower Street, 123',
         city: 'São Paulo',
         state: 'SP',
         zipCode: '01234-567',
@@ -199,8 +199,8 @@ const Profile: React.FC = () => {
         hasAutoInsurance: true,
         hasHomeInsurance: false,
         smoker: false,
-        preExistingConditions: ['Hipertensão leve'],
-        hobbies: ['Futebol', 'Leitura', 'Viagem'],
+        preExistingConditions: ['Mild hypertension'],
+        hobbies: ['Football', 'Reading', 'Travel'],
         createdAt: new Date('2024-01-15'),
         updatedAt: new Date()
       };

@@ -34,14 +34,14 @@ const Login: React.FC = () => {
     try {
       await login(email, password);
       toast({
-        title: "Login realizado com sucesso",
-        description: "Bem-vindo ao Stellar Insurance!",
+        title: "Login successful",
+        description: "Welcome to Stellar Insurance!",
       });
       navigate('/');
     } catch (error) {
       toast({
-        title: "Erro no login",
-        description: "Verifique suas credenciais e tente novamente.",
+        title: "Login error",
+        description: "Please check your credentials and try again.",
         variant: "destructive"
       });
     } finally {
@@ -58,8 +58,8 @@ const Login: React.FC = () => {
       setOtpSent(true);
       setLoading(false);
       toast({
-        title: "Código enviado!",
-        description: "Verifique seu WhatsApp para o código de verificação.",
+        title: "Code sent!",
+        description: "Check your WhatsApp for the verification code.",
       });
     } else {
       // Verify OTP
@@ -69,8 +69,8 @@ const Login: React.FC = () => {
         navigate('/');
       } catch (error) {
         toast({
-          title: "Código inválido",
-          description: "Verifique o código e tente novamente.",
+        title: "Invalid code",
+        description: "Please check the code and try again.",
           variant: "destructive"
         });
       } finally {
@@ -92,12 +92,12 @@ const Login: React.FC = () => {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gradient-primary">Stellar Insurance</h1>
-          <p className="text-muted-foreground mt-2">Entre ou cadastre-se para continuar</p>
+          <p className="text-muted-foreground mt-2">Sign in or register to continue</p>
         </div>
 
         <Tabs defaultValue="email" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="email">E-mail</TabsTrigger>
+            <TabsTrigger value="email">Email</TabsTrigger>
             <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
           </TabsList>
 
@@ -107,31 +107,31 @@ const Login: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5" />
-                  Login com E-mail
+                  Email Login
                 </CardTitle>
                 <CardDescription>
-                  Use seu e-mail e senha para acessar sua conta
+                  Use your email and password to access your account
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handleEmailLogin}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">E-mail</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="seu@email.com"
+                      placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password">Password</Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Sua senha"
+                      placeholder="Your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -140,12 +140,12 @@ const Login: React.FC = () => {
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-2">
                   <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-                    {loading ? "Entrando..." : "Entrar"}
+                    {loading ? "Signing in..." : "Sign in"}
                   </Button>
                   <p className="text-sm text-center text-muted-foreground">
-                    Não tem uma conta?{' '}
+                    Don't have an account?{' '}
                     <Link to="/register" className="text-primary hover:underline">
-                      Cadastre-se
+                      Sign up
                     </Link>
                   </p>
                 </CardFooter>
@@ -159,10 +159,10 @@ const Login: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Phone className="w-5 h-5" />
-                  Login via WhatsApp
+                  WhatsApp Login
                 </CardTitle>
                 <CardDescription>
-                  Receba um código de verificação no seu WhatsApp
+                  Receive a verification code on your WhatsApp
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handlePhoneOtp}>
@@ -181,7 +181,7 @@ const Login: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label htmlFor="otp">Código de Verificação</Label>
+                      <Label htmlFor="otp">Verification Code</Label>
                       <Input
                         id="otp"
                         type="text"
@@ -191,14 +191,14 @@ const Login: React.FC = () => {
                         required
                       />
                       <p className="text-sm text-muted-foreground">
-                        Código enviado para {phone}
+                        Code sent to {phone}
                       </p>
                     </div>
                   )}
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-                    {loading ? "Enviando..." : otpSent ? "Verificar Código" : "Enviar Código"}
+                    {loading ? "Sending..." : otpSent ? "Verify Code" : "Send Code"}
                   </Button>
                 </CardFooter>
               </form>
