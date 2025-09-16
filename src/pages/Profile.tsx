@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { LedgerService, LedgerEventUI } from '@/services/ledgerService';
 import { useWallet } from '@/contexts/WalletContext';
 
 interface UserProfile {
@@ -76,13 +77,8 @@ interface UserProfile {
   updatedAt: Date;
 }
 
-interface ActivityLog {
-  id: string;
-  action: string;
-  description: string;
-  timestamp: Date;
-  type: 'login' | 'policy' | 'payment' | 'kyc' | 'profile';
-}
+// Usar LedgerEventUI em vez de ActivityLog
+type ActivityLog = LedgerEventUI;
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -247,48 +243,14 @@ const Profile: React.FC = () => {
 
   const fetchActivities = async () => {
     try {
-      // Mock activities data
-      const mockActivities: ActivityLog[] = [
-        {
-          id: '1',
-          action: 'Login performed',
-          description: 'System access via email',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          type: 'login'
-        },
-        {
-          id: '2',
-          action: 'Policy activated',
-          description: 'Accidents 48h - R$ 3.00',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          type: 'policy'
-        },
-        {
-          id: '3',
-          action: 'Payment confirmed',
-          description: 'PIX - R$ 3.00',
-          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-          type: 'payment'
-        },
-        {
-          id: '4',
-          action: 'Document sent',
-          description: 'ID for KYC verification',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          type: 'kyc'
-        },
-        {
-          id: '5',
-          action: 'Profile updated',
-          description: 'Phone changed',
-          timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-          type: 'profile'
-        }
-      ];
+      if (!user?.id) return;
       
-      setActivities(mockActivities);
+      const ledgerEvents = await LedgerService.getUserEvents(user.id);
+      setActivities(ledgerEvents);
     } catch (error) {
       console.error('Error loading activities:', error);
+      // Em caso de erro, manter array vazio
+      setActivities([]);
     }
   };
 
@@ -485,16 +447,22 @@ const Profile: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'login':
-        return <User className="w-4 h-4 text-primary" />;
-      case 'policy':
+      case 'PolicyActivated':
         return <Shield className="w-4 h-4 text-success" />;
-      case 'payment':
+      case 'PolicyPaused':
+        return <Shield className="w-4 h-4 text-warning" />;
+      case 'PolicyExpired':
+        return <Shield className="w-4 h-4 text-destructive" />;
+      case 'WEBHOOK_PAYMENT_CONFIRMED':
         return <Wallet className="w-4 h-4 text-secondary" />;
-      case 'kyc':
-        return <FileText className="w-4 h-4 text-warning" />;
-      case 'profile':
+      case 'CHARGE_STARTED':
+        return <Wallet className="w-4 h-4 text-primary" />;
+      case 'UserLogin':
+        return <User className="w-4 h-4 text-primary" />;
+      case 'ProfileUpdated':
         return <Settings className="w-4 h-4 text-muted-foreground" />;
+      case 'KycDocumentUploaded':
+        return <FileText className="w-4 h-4 text-warning" />;
       default:
         return <Activity className="w-4 h-4 text-muted-foreground" />;
     }
@@ -1211,8 +1179,13 @@ const Profile: React.FC = () => {
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{activity.action}</p>
+                      <p className="text-sm font-medium">{activity.type}</p>
                       <p className="text-xs text-muted-foreground">{activity.description}</p>
+                      {activity.amount > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          R$ {activity.amount.toFixed(2)}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {activity.timestamp.toLocaleString('pt-BR')}
                       </p>
