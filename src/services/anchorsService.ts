@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { AnchorTransaction } from '@/types';
+import { AnchorTransaction, DepositResponse } from '@/types';
 
 export class AnchorsService {
-  static async deposit(userId: string, amount: number) {
+  static async deposit(userId: string, amount: number): Promise<DepositResponse> {
     const res = await api.anchors.deposit({ userId, amount });
     return res;
   }

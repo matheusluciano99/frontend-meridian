@@ -74,10 +74,13 @@ const Dashboard: React.FC = () => {
     }
     setWalletLoading(true);
     try {
-      await AnchorsService.deposit(user.id, value);
-      toast({ title: 'Depósito iniciado', description: 'Complete o fluxo do Anchor (stub)' });
-      const txs = await AnchorsService.list(user.id);
-      setAnchorTxs(txs);
+      const result = await AnchorsService.deposit(user.id, value);
+      if (result.interactiveUrl) {
+        // Redirecionar para a URL da âncora para completar o pagamento
+        window.location.href = result.interactiveUrl;
+      } else {
+        toast({ title: 'Erro', description: 'URL de depósito não recebida', variant: 'destructive' });
+      }
     } catch (err:any) {
       toast({ title: 'Erro no depósito', description: err.message, variant: 'destructive' });
     } finally {

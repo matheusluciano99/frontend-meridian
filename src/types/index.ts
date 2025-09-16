@@ -98,6 +98,12 @@ export interface PaymentMethod {
   available: boolean;
 }
 
+export interface DepositResponse {
+  interactiveUrl: string;
+  anchorTransaction: AnchorTransaction;
+  walletPublicKey: string;
+}
+
 export interface AnchorTransaction {
   id: string;
   user_id: string;
