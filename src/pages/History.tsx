@@ -13,18 +13,26 @@ import {
   CheckCircle,
   AlertCircle,
   DollarSign,
-  Shield
+  Shield,
+  Play,
+  Pause,
+  Calendar,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { LedgerService, LedgerEventUI } from '@/services/ledgerService';
+import { PoliciesService, Policy } from '@/services/policiesService';
 
 const History: React.FC = () => {
   const [events, setEvents] = useState<LedgerEventUI[]>([]);
+  const [policies, setPolicies] = useState<Policy[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<LedgerEventUI[]>([]);
+  const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'policies' | 'transactions'>('policies');
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -32,14 +40,21 @@ const History: React.FC = () => {
     const fetchHistory = async () => {
       if (!user?.id) { setLoading(false); return; }
       try {
-        const evts = await LedgerService.getUserEvents(user.id);
-        setEvents(evts);
-        setFilteredEvents(evts);
+        // Buscar apólices e transações em paralelo
+        const [policiesData, eventsData] = await Promise.all([
+          PoliciesService.getUserPolicies(user.id),
+          LedgerService.getUserEvents(user.id)
+        ]);
+        
+        setPolicies(policiesData);
+        setEvents(eventsData);
+        setFilteredPolicies(policiesData);
+        setFilteredEvents(eventsData);
       } catch (error) {
         console.error(error);
         toast({
-          title: 'Error loading history',
-          description: 'Could not load transaction history.',
+          title: 'Erro ao carregar histórico',
+          description: 'Não foi possível carregar o histórico de apólices e transações.',
           variant: 'destructive'
         });
       } finally {
@@ -50,24 +65,34 @@ const History: React.FC = () => {
   }, [toast, user?.id]);
 
   useEffect(() => {
-    let filtered = events;
-
-    // Filter by search term
+    // Filtrar apólices
+    let filteredPolicies = policies;
     if (searchTerm) {
-      filtered = filtered.filter(event =>
+      filteredPolicies = filteredPolicies.filter(policy =>
+        policy.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        policy.product?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        policy.status.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (filterType !== 'all') {
+      filteredPolicies = filteredPolicies.filter(policy => policy.status === filterType);
+    }
+    setFilteredPolicies(filteredPolicies);
+
+    // Filtrar transações
+    let filteredEvents = events;
+    if (searchTerm) {
+      filteredEvents = filteredEvents.filter(event =>
         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.policyId?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    // Filter by type
     if (filterType !== 'all') {
-      filtered = filtered.filter(event => event.type === filterType);
+      filteredEvents = filteredEvents.filter(event => event.type === filterType);
     }
-
-    setFilteredEvents(filtered);
-  }, [events, searchTerm, filterType]);
+    setFilteredEvents(filteredEvents);
+  }, [policies, events, searchTerm, filterType]);
 
   const getEventIcon = (type: string) => {
     switch (type) {
@@ -86,7 +111,42 @@ const History: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getPolicyStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return (
+          <Badge variant="secondary" className="bg-success/20 text-success">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Ativa
+          </Badge>
+        );
+      case 'PAUSED':
+        return (
+          <Badge variant="secondary" className="bg-warning/20 text-warning">
+            <Pause className="w-3 h-3 mr-1" />
+            Pausada
+          </Badge>
+        );
+      case 'EXPIRED':
+        return (
+          <Badge variant="secondary" className="bg-destructive/20 text-destructive">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Expirada
+          </Badge>
+        );
+      case 'CANCELLED':
+        return (
+          <Badge variant="secondary" className="bg-muted/20 text-muted-foreground">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Cancelada
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const getEventStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
         return (
@@ -111,6 +171,50 @@ const History: React.FC = () => {
     }
   };
 
+  const handlePausePolicy = async (policyId: string) => {
+    try {
+      await PoliciesService.pause(policyId);
+      toast({
+        title: "Apólice pausada",
+        description: "A apólice foi pausada com sucesso.",
+      });
+      // Recarregar dados
+      if (user?.id) {
+        const policiesData = await PoliciesService.getUserPolicies(user.id);
+        setPolicies(policiesData);
+        setFilteredPolicies(policiesData);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao pausar apólice",
+        description: "Não foi possível pausar a apólice.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleActivatePolicy = async (policyId: string) => {
+    try {
+      await PoliciesService.activate(policyId);
+      toast({
+        title: "Apólice ativada",
+        description: "A apólice foi ativada com sucesso.",
+      });
+      // Recarregar dados
+      if (user?.id) {
+        const policiesData = await PoliciesService.getUserPolicies(user.id);
+        setPolicies(policiesData);
+        setFilteredPolicies(policiesData);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao ativar apólice",
+        description: "Não foi possível ativar a apólice.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleExportPDF = () => {
     toast({
       title: "Exporting PDF",
@@ -122,6 +226,10 @@ const History: React.FC = () => {
   const totalAmount = events
     .filter(e => e.status === 'completed' && e.amount > 0)
     .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalPolicies = policies.length;
+  const activePolicies = policies.filter(p => p.status === 'ACTIVE').length;
+  const totalSpent = policies.reduce((sum, p) => sum + p.premium_amount, 0);
 
   if (loading) {
     return (
@@ -151,46 +259,98 @@ const History: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Transaction History</h1>
+            <h1 className="text-3xl font-bold mb-2">Histórico</h1>
             <p className="text-muted-foreground">
-              Track all your activities and payments
+              Gerencie suas apólices e acompanhe transações
             </p>
           </div>
           <Button onClick={handleExportPDF} variant="outline">
             <Download className="w-4 h-4 mr-2" />
-            Export PDF
+            Exportar PDF
+          </Button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 bg-muted/30 p-1 rounded-lg w-fit">
+          <Button
+            variant={activeTab === 'policies' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setActiveTab('policies')}
+            className="flex items-center gap-2"
+          >
+            <Shield className="w-4 h-4" />
+            Apólices ({totalPolicies})
+          </Button>
+          <Button
+            variant={activeTab === 'transactions' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setActiveTab('transactions')}
+            className="flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Transações ({events.length})
           </Button>
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6 text-center">
-              <DollarSign className="w-8 h-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold">R$ {totalAmount.toFixed(2)}</div>
-              <p className="text-muted-foreground">Total Spent</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6 text-center">
-              <Shield className="w-8 h-8 text-success mx-auto mb-2" />
-              <div className="text-2xl font-bold">
-                {events.filter(e => e.type === 'PolicyActivated').length}
-              </div>
-              <p className="text-muted-foreground">Policies Activated</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6 text-center">
-              <CheckCircle className="w-8 h-8 text-success mx-auto mb-2" />
-              <div className="text-2xl font-bold">
-                {events.filter(e => e.status === 'completed').length}
-              </div>
-              <p className="text-muted-foreground">Completed Transactions</p>
-            </CardContent>
-          </Card>
+          {activeTab === 'policies' ? (
+            <>
+              <Card className="glass-card border-border/50">
+                <CardContent className="p-6 text-center">
+                  <DollarSign className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold">R$ {totalSpent.toFixed(2)}</div>
+                  <p className="text-muted-foreground">Total Gasto</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card border-border/50">
+                <CardContent className="p-6 text-center">
+                  <Shield className="w-8 h-8 text-success mx-auto mb-2" />
+                  <div className="text-2xl font-bold">{activePolicies}</div>
+                  <p className="text-muted-foreground">Apólices Ativas</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card border-border/50">
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="w-8 h-8 text-success mx-auto mb-2" />
+                  <div className="text-2xl font-bold">{totalPolicies}</div>
+                  <p className="text-muted-foreground">Total de Apólices</p>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card className="glass-card border-border/50">
+                <CardContent className="p-6 text-center">
+                  <DollarSign className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold">R$ {totalAmount.toFixed(2)}</div>
+                  <p className="text-muted-foreground">Total em Transações</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card border-border/50">
+                <CardContent className="p-6 text-center">
+                  <Shield className="w-8 h-8 text-success mx-auto mb-2" />
+                  <div className="text-2xl font-bold">
+                    {events.filter(e => e.type === 'PolicyActivated').length}
+                  </div>
+                  <p className="text-muted-foreground">Apólices Ativadas</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card border-border/50">
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="w-8 h-8 text-success mx-auto mb-2" />
+                  <div className="text-2xl font-bold">
+                    {events.filter(e => e.status === 'completed').length}
+                  </div>
+                  <p className="text-muted-foreground">Transações Concluídas</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Filters */}
@@ -199,7 +359,10 @@ const History: React.FC = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search by description, type or policy ID..."
+                placeholder={activeTab === 'policies' 
+                  ? "Buscar por número da apólice, produto ou status..."
+                  : "Buscar por descrição, tipo ou ID da apólice..."
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -212,101 +375,198 @@ const History: React.FC = () => {
             onChange={(e) => setFilterType(e.target.value)}
             className="px-4 py-2 rounded-md border border-border bg-background text-foreground"
           >
-            <option value="all">All types</option>
-            <option value="PolicyActivated">Policies Activated</option>
-            <option value="WEBHOOK_PAYMENT_CONFIRMED">Payments</option>
-            <option value="CHARGE_STARTED">Charges</option>
-            <option value="PolicyPaused">Paused</option>
-            <option value="PolicyExpired">Expired</option>
+            {activeTab === 'policies' ? (
+              <>
+                <option value="all">Todos os status</option>
+                <option value="ACTIVE">Ativas</option>
+                <option value="PAUSED">Pausadas</option>
+                <option value="EXPIRED">Expiradas</option>
+                <option value="CANCELLED">Canceladas</option>
+              </>
+            ) : (
+              <>
+                <option value="all">Todos os tipos</option>
+                <option value="PolicyActivated">Apólices Ativadas</option>
+                <option value="WEBHOOK_PAYMENT_CONFIRMED">Pagamentos</option>
+                <option value="CHARGE_STARTED">Cobranças</option>
+                <option value="PolicyPaused">Pausadas</option>
+                <option value="PolicyExpired">Expiradas</option>
+              </>
+            )}
           </select>
         </div>
 
-        {/* Events List */}
+        {/* Content List */}
         <Card className="glass-card border-border/50">
           <CardHeader>
-            <CardTitle>Recent Events</CardTitle>
+            <CardTitle>
+              {activeTab === 'policies' ? 'Suas Apólices' : 'Transações Recentes'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {filteredEvents.length === 0 ? (
-              <div className="text-center py-12">
-                <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No events found</h3>
-                <p className="text-muted-foreground">
-                  {searchTerm || filterType !== 'all' 
-                    ? 'Try adjusting the search filters.'
-                    : 'Your transactions will appear here.'}
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border/50">
-                {filteredEvents.map((event, index) => (
-                  <div
-                    key={event.id}
-                    className={`p-6 hover:bg-muted/30 transition-smooth ${
-                      index === 0 ? 'bg-primary/5 border-l-4 border-primary' : ''
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="mt-1">
-                          {getEventIcon(event.type)}
+            {activeTab === 'policies' ? (
+              filteredPolicies.length === 0 ? (
+                <div className="text-center py-12">
+                  <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Nenhuma apólice encontrada</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm || filterType !== 'all' 
+                      ? 'Tente ajustar os filtros de busca.'
+                      : 'Suas apólices aparecerão aqui.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {filteredPolicies.map((policy, index) => (
+                    <div
+                      key={policy.id}
+                      className={`p-6 hover:bg-muted/30 transition-smooth ${
+                        index === 0 ? 'bg-primary/5 border-l-4 border-primary' : ''
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="mt-1">
+                            <Shield className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium">{policy.product?.name || 'Produto'}</h4>
+                              {getPolicyStatusBadge(policy.status)}
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                              <span className="font-mono">
+                                {policy.policy_number}
+                              </span>
+                              
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(policy.start_date).toLocaleDateString('pt-BR')} - {new Date(policy.end_date).toLocaleDateString('pt-BR')}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium">{event.description}</h4>
-                            {getStatusBadge(event.status)}
+                        
+                        <div className="flex items-center gap-2">
+                          <div className="text-right mr-4">
+                            <div className="font-bold text-lg">
+                              R$ {policy.premium_amount.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Cobertura: R$ {policy.coverage_amount.toFixed(2)}
+                            </div>
                           </div>
                           
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                            <span>
-                              {event.timestamp.toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                            
-                            {event.policyId && (
-                              <span className="font-mono">
-                                ID: {event.policyId}
-                              </span>
-                            )}
-                            
-                            {event.txHash && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                asChild
-                                className="h-auto p-0 text-xs"
-                              >
-                                <a
-                                  href={`https://stellar.expert/explorer/testnet/tx/${event.txHash}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 hover:text-primary"
-                                >
-                                  View on Stellar
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
-                              </Button>
-                            )}
-                          </div>
+                          {policy.status === 'ACTIVE' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePausePolicy(policy.id)}
+                            >
+                              <Pause className="w-4 h-4 mr-1" />
+                              Pausar
+                            </Button>
+                          )}
+                          
+                          {policy.status === 'PAUSED' && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleActivatePolicy(policy.id)}
+                            >
+                              <Play className="w-4 h-4 mr-1" />
+                              Ativar
+                            </Button>
+                          )}
                         </div>
                       </div>
-                      
-                      {event.amount > 0 && (
-                        <div className="text-right">
-                          <div className="font-bold text-lg">
-                            R$ {event.amount.toFixed(2)}
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              filteredEvents.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Nenhuma transação encontrada</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm || filterType !== 'all' 
+                      ? 'Tente ajustar os filtros de busca.'
+                      : 'Suas transações aparecerão aqui.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {filteredEvents.map((event, index) => (
+                    <div
+                      key={event.id}
+                      className={`p-6 hover:bg-muted/30 transition-smooth ${
+                        index === 0 ? 'bg-primary/5 border-l-4 border-primary' : ''
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="mt-1">
+                            {getEventIcon(event.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium">{event.description}</h4>
+                              {getEventStatusBadge(event.status)}
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                              <span>
+                                {event.timestamp.toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                              
+                              {event.policyId && (
+                                <span className="font-mono">
+                                  ID: {event.policyId}
+                                </span>
+                              )}
+                              
+                              {event.txHash && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  asChild
+                                  className="h-auto p-0 text-xs"
+                                >
+                                  <a
+                                    href={`https://stellar.expert/explorer/testnet/tx/${event.txHash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 hover:text-primary"
+                                  >
+                                    Ver no Stellar
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      )}
+                        
+                        {event.amount > 0 && (
+                          <div className="text-right">
+                            <div className="font-bold text-lg">
+                              R$ {event.amount.toFixed(2)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </CardContent>
         </Card>

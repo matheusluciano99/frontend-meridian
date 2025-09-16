@@ -132,4 +132,29 @@ export class PoliciesService {
       throw new Error('Não foi possível carregar a apólice.');
     }
   }
+
+  static async pause(policyId: string): Promise<Policy> {
+    try {
+      const token = await this.getAuthToken();
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      
+      const response = await fetch(`${API_BASE_URL}/policies/${policyId}/pause`, {
+        method: 'POST',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erro detalhado:', errorText);
+        throw new Error(`Erro ao pausar apólice: ${response.statusText} - ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao pausar apólice:', error);
+      throw new Error('Não foi possível pausar a apólice. Tente novamente.');
+    }
+  }
 }
