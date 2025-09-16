@@ -35,6 +35,13 @@ export const api = {
   ledger: {
     getAll: (userId?: string) => api.request<any[]>(`/ledger${userId ? `?userId=${userId}` : ''}`),
   },
+  claims: {
+    getAll: (userId: string) => api.request<any[]>(`/claims?userId=${userId}`),
+    create: (payload: any) => api.request<any>(`/claims`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  },
 };
 
 // Tipos da API (baseados no backend)
