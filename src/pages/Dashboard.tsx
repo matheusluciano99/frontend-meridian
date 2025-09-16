@@ -10,12 +10,20 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import heroImage from '@/assets/hero-insurance.jpg';
 import { ProductsService } from '@/services/productsService';
+import { AnchorsService } from '@/services/anchorsService';
+import { useAuth } from '@/contexts/AuthContext';
+import { AnchorTransaction } from '@/types';
 import { Product } from '@/types';
 
 const Dashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, refreshBalance } = useAuth();
+  const [anchorTxs, setAnchorTxs] = useState<AnchorTransaction[]>([]);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [anchorBalance, setAnchorBalance] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
@@ -40,6 +48,52 @@ const Dashboard: React.FC = () => {
 
     fetchProducts();
   }, [toast]);
+
+  useEffect(() => {
+    const loadAnchorData = async () => {
+      if (!user) return;
+      try {
+        const txs = await AnchorsService.list(user.id);
+        setAnchorTxs(txs);
+        const bal = await AnchorsService.derivedBalance(user.id);
+        setAnchorBalance(bal);
+      } catch (e) {
+        // silencioso
+      }
+    };
+    loadAnchorData();
+  }, [user]);
+
+  const handleDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const value = parseFloat(depositAmount);
+    if (isNaN(value) || value <= 0) {
+      toast({ title: 'Valor inválido', variant: 'destructive' });
+      return;
+    }
+    setWalletLoading(true);
+    try {
+      await AnchorsService.deposit(user.id, value);
+      toast({ title: 'Depósito iniciado', description: 'Complete o fluxo do Anchor (stub)' });
+      const txs = await AnchorsService.list(user.id);
+      setAnchorTxs(txs);
+    } catch (err:any) {
+      toast({ title: 'Erro no depósito', description: err.message, variant: 'destructive' });
+    } finally {
+      setWalletLoading(false);
+      setDepositAmount('');
+    }
+  };
+
+  const refreshAnchor = async () => {
+    if (!user) return;
+    const txs = await AnchorsService.list(user.id);
+    setAnchorTxs(txs);
+    const bal = await AnchorsService.derivedBalance(user.id);
+    setAnchorBalance(bal);
+    refreshBalance();
+  };
 
   // Filter products based on search and filters
   useEffect(() => {
@@ -143,6 +197,79 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Wallet / Anchor Section */}
+        {user && (
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold mb-4">Minha Carteira</h2>
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <Card className="glass-card border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle>Saldo (derivado)</CardTitle>
+                  <CardDescription>Soma de depósitos concluídos</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">R$ {anchorBalance.toFixed(2)}</p>
+                  <Button size="sm" variant="outline" className="mt-4" onClick={refreshAnchor}>Atualizar</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card border-border/50 md:col-span-2">
+                <CardHeader className="pb-3">
+                  <CardTitle>Novo Depósito</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleDeposit} className="flex flex-col md:flex-row gap-4 items-start md:items-end">
+                    <div className="flex-1">
+                      <label className="text-sm mb-1 block">Valor (R$)</label>
+                      <Input value={depositAmount} onChange={e => setDepositAmount(e.target.value)} placeholder="100.00" />
+                    </div>
+                    <Button type="submit" disabled={walletLoading}>{walletLoading ? 'Enviando...' : 'Depositar'}</Button>
+                    <Button type="button" variant="outline" onClick={async ()=>{ await AnchorsService.reconcile(); refreshAnchor(); }}>Reconciliar</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="glass-card border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle>Transações</CardTitle>
+                <CardDescription>Histórico Anchor</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto -mx-2 md:mx-0">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-muted-foreground border-b border-border/40">
+                        <th className="py-2 pr-4">ID</th>
+                        <th className="py-2 pr-4">Tipo</th>
+                        <th className="py-2 pr-4">Valor</th>
+                        <th className="py-2 pr-4">Status</th>
+                        <th className="py-2 pr-4">Criado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {anchorTxs.length === 0 && (
+                        <tr><td colSpan={5} className="py-4 text-center text-muted-foreground">Nenhuma transação</td></tr>
+                      )}
+                      {anchorTxs.map(tx => (
+                        <tr key={tx.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+                          <td className="py-2 pr-4 max-w-[140px] truncate" title={tx.id}>{tx.id}</td>
+                          <td className="py-2 pr-4 capitalize">{tx.type}</td>
+                          <td className="py-2 pr-4">R$ {parseFloat(String(tx.amount)).toFixed(2)}</td>
+                          <td className="py-2 pr-4">
+                            <Badge variant={tx.status === 'COMPLETED' ? 'default' : tx.status === 'PENDING' ? 'outline' : 'secondary'}>{tx.status}</Badge>
+                          </td>
+                          <td className="py-2 pr-4">{new Date(tx.created_at).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Products Section */}
         <div ref={productsSectionRef} className="mb-8">

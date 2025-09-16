@@ -97,3 +97,15 @@ export interface PaymentMethod {
   fees: number;
   available: boolean;
 }
+
+export interface AnchorTransaction {
+  id: string;
+  user_id: string;
+  type: 'deposit' | 'withdraw';
+  asset_code: string;
+  amount: string | number;
+  status: string; // PENDING, COMPLETED, etc
+  memo?: string;
+  created_at: string;
+  updated_at: string;
+}

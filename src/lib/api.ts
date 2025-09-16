@@ -42,6 +42,17 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   },
+  anchors: {
+    deposit: (payload: { userId: string; amount: number }) =>
+      api.request<any>(`/anchors/deposit`, { method: 'POST', body: JSON.stringify(payload) }),
+    transactions: (userId: string) =>
+      api.request<any[]>(`/anchors/transactions?userId=${userId}`),
+    reconcile: () => api.request<any>(`/anchors/reconcile`),
+    authChallenge: (publicKey: string) =>
+      api.request<any>(`/anchors/auth/challenge`, { method: 'POST', body: JSON.stringify({ publicKey }) }),
+    authVerify: (publicKey: string, signedXdr: string) =>
+      api.request<any>(`/anchors/auth/verify`, { method: 'POST', body: JSON.stringify({ publicKey, signedXdr }) }),
+  },
 };
 
 // Tipos da API (baseados no backend)
